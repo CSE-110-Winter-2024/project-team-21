@@ -47,5 +47,29 @@ public class MainActivityTest {
     @Rule
     public ActivityScenarioRule<MainActivity> activityRule =
             new ActivityScenarioRule<>(MainActivity.class);
+    @Test
+    public void addGoal_IsDisplayedInRecyclerView() {
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        onView(withText("Test Goal")).check(matches(isDisplayed()));
+    }
 
+    @Test
+    public void goalAdditionCancelled_NoGoalsTextStillDisplayed() {
+        onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("New Goal"), ViewActions.closeSoftKeyboard());
+        onView(withText("Cancel")).perform(click());
+        onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void noGoalsText_VisibilityChangesAfterAddingGoal() {
+        onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        onView(withId(R.id.no_goals_text)).check(matches(not(isDisplayed())));
+    }
 }
