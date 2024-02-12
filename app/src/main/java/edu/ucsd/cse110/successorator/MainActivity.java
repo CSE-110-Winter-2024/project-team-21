@@ -55,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Add Goal");
 
         final EditText input = new EditText(this);
+
+        // Assign the ID to the EditText
+        input.setId(R.id.edit_text_goal_id);
+
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
@@ -62,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String goal = input.getText().toString().trim();
-
                 if (!TextUtils.isEmpty(goal)) {
                     goalsList.add(goal);
                     adapter.notifyDataSetChanged();
