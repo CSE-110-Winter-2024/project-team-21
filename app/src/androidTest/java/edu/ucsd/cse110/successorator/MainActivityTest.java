@@ -1,17 +1,34 @@
 package edu.ucsd.cse110.successorator;
 
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+
+import androidx.test.espresso.action.ViewActions;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static androidx.test.core.app.ActivityScenario.launch;
 
 import static junit.framework.TestCase.assertEquals;
+
+import static org.hamcrest.CoreMatchers.not;
 
 import android.content.res.Resources;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.Assert;
 
 import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
 
@@ -23,22 +40,36 @@ import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
 @RunWith(AndroidJUnit4.class)
 public class MainActivityTest {
     @Test
-    public void displaysHelloWorld() {
-        try (var scenario = ActivityScenario.launch(MainActivity.class)) {
+    public void addition_isCorrect() {
+        Assert.assertEquals(4, 2 + 2);
+    }
 
-            // Observe the scenario's lifecycle to wait until the activity is created.
-            scenario.onActivity(activity -> {
-                var rootView = activity.findViewById(R.id.root);
-                var binding = ActivityMainBinding.bind(rootView);
+    @Rule
+    public ActivityScenarioRule<MainActivity> activityRule =
+            new ActivityScenarioRule<>(MainActivity.class);
+    @Test
+    public void addGoal_IsDisplayedInRecyclerView() {
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        onView(withText("Test Goal")).check(matches(isDisplayed()));
+    }
 
-                var expected = activity.getString(R.string.hello_world);
-                var actual = binding.placeholderText.getText();
+    @Test
+    public void goalAdditionCancelled_NoGoalsTextStillDisplayed() {
+        onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("New Goal"), ViewActions.closeSoftKeyboard());
+        onView(withText("Cancel")).perform(click());
+        onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
+    }
 
-                assertEquals(expected, actual);
-            });
-
-            // Simulate moving to the started state (above will then be called).
-            scenario.moveToState(Lifecycle.State.STARTED);
-        }
+    @Test
+    public void noGoalsText_VisibilityChangesAfterAddingGoal() {
+        onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        onView(withId(R.id.no_goals_text)).check(matches(not(isDisplayed())));
     }
 }

@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Successorator</string>
     <string name="placeholder">Placeholder</string>
-    <string name="hello_world">Hello, World!</string>
+    <string name="hello_world">yeah</string>
+    <string name="no_goals_for_the_day">No goals for the day</string>
+
 </resources>
