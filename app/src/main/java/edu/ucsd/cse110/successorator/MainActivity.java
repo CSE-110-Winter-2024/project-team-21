@@ -22,12 +22,18 @@ public class MainActivity extends AppCompatActivity {
     private GoalsAdapter adapter;
     private List<String> goalsList;
 
+
+
+    //Nicholas and Jacob
+    private GoalFinished goalFinished;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // Initialize the list of goals
+        goalFinished = new GoalFinished(this);
         goalsList = new ArrayList<>();
 
         // Find views
@@ -35,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         noGoalsTextView = findViewById(R.id.no_goals_text);
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList);
+        adapter = new GoalsAdapter(goalsList, this);
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -92,5 +98,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             noGoalsTextView.setVisibility(View.GONE);
         }
+    }
+
+    // Example of handling checkbox click
+    private void handleCheckBoxClick(String goalName) {
+        // Update completion status of the goal using GoalFinished class
+        goalFinished.markGoalCompleted(goalName);
     }
 }
