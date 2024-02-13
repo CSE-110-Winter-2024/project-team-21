@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
@@ -21,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<String> goalsList;
+
+    private Consumer<Integer> onCompletionClick;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         noGoalsTextView = findViewById(R.id.no_goals_text);
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList);
+        adapter = new GoalsAdapter(goalsList, onCompletionClick);
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
