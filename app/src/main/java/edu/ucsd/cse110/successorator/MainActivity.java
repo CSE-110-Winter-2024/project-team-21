@@ -1,10 +1,13 @@
 package edu.ucsd.cse110.successorator;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.TextView;
 import java.util.ArrayList;
@@ -21,19 +24,17 @@ public class MainActivity extends AppCompatActivity {
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<String> goalsList;
-
-
-
-    //Nicholas and Jacob
     private GoalFinished goalFinished;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize the list of goals
         goalFinished = new GoalFinished(this);
+
+        // Initialize the list of goals
         goalsList = new ArrayList<>();
 
         // Find views
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         noGoalsTextView = findViewById(R.id.no_goals_text);
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList, this);
+        adapter = new GoalsAdapter(goalsList,this, goalFinished);
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -61,10 +62,6 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Add Goal");
 
         final EditText input = new EditText(this);
-
-        // Assign the ID to the EditText
-        input.setId(R.id.edit_text_goal_id);
-
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
@@ -98,11 +95,5 @@ public class MainActivity extends AppCompatActivity {
         } else {
             noGoalsTextView.setVisibility(View.GONE);
         }
-    }
-
-    // Example of handling checkbox click
-    private void handleCheckBoxClick(String goalName) {
-        // Update completion status of the goal using GoalFinished class
-        goalFinished.markGoalCompleted(goalName);
     }
 }
