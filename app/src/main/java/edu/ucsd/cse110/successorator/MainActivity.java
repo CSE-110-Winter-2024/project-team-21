@@ -1,7 +1,6 @@
 package edu.ucsd.cse110.successorator;
 
 import android.os.Bundle;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,15 +11,24 @@ import java.util.List;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
+import android.widget.ImageButton;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<String> goalsList;
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechRecognizerIntent;
+    private static final int SPEECH_REQUEST_CODE = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,24 +56,49 @@ public class MainActivity extends AppCompatActivity {
                 showAddGoalDialog();
             }
         });
+
+        // Initialize SpeechRecognizer and Intent
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
     }
 
+    private AlertDialog dialog;
     private void showAddGoalDialog() {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
 
-        final EditText input = new EditText(this);
+        // Inflate the custom layout for the dialog
+        View dialogLayout = getLayoutInflater().inflate(R.layout.dialog_add_goal, null);
+        final EditText input = dialogLayout.findViewById(R.id.edit_text_goal);
+        ImageButton micButton = dialogLayout.findViewById(R.id.button_mic);
+        ImageButton closeButton = dialogLayout.findViewById(R.id.button_close);
 
-        // Assign the ID to the EditText
-        input.setId(R.id.edit_text_goal_id);
+        // Set OnClickListener for the mic button to start speech recognition
+        micButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startSpeechToText();
+            }
+        });
 
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
+        // Set OnClickListener for the close button to dismiss the dialog
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.setView(dialogLayout);
 
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String goal = input.getText().toString().trim();
+
                 if (!TextUtils.isEmpty(goal)) {
                     goalsList.add(goal);
                     adapter.notifyDataSetChanged();
@@ -83,7 +116,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        builder.show();
+        dialog = builder.create(); // Create the dialog
+        dialog.show(); // Show the dialog
     }
 
     private void updateNoGoalsVisibility() {
@@ -93,4 +127,37 @@ public class MainActivity extends AppCompatActivity {
             noGoalsTextView.setVisibility(View.GONE);
         }
     }
+
+    // Method to start speech recognition
+    private void startSpeechToText() {
+        try {
+            startActivityForResult(speechRecognizerIntent, SPEECH_REQUEST_CODE);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(MainActivity.this, "Speech recognition not supported on this device", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Handle the result from speech recognition
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            String spokenText = result.get(0);
+            // Now spoken text can be used as the goal and added to the list
+            addGoal(spokenText);
+        }
+    }
+
+    private void addGoal(String goal) {
+        if (!TextUtils.isEmpty(goal)) {
+            goalsList.add(goal);
+            adapter.notifyDataSetChanged();
+            updateNoGoalsVisibility();
+        } else {
+            Toast.makeText(MainActivity.this, "Please try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
