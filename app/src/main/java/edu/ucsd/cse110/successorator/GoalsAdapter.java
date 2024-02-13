@@ -46,9 +46,6 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             if (isChecked) {
                 // Apply strikethrough effect
                 holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                notifyItemMoved(position, goalsList.size()-1);
-                String item = goalsList.remove(position); // Remove and capture the item
-                goalsList.add(item); // Add it back at the end
             } else {
                 // Remove strikethrough effect
                 holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
