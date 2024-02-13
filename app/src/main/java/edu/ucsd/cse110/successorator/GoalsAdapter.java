@@ -16,6 +16,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     private List<String> goalsList;
     private Map<String, Boolean> checkedStates = new HashMap<>();
+    private int completed;
     Consumer<Integer> onCompletionClick;
 
     public GoalsAdapter(List<String> goalsList, Consumer<Integer> onCompletionClick) {
@@ -25,6 +26,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         for (String goal : goalsList) {
             checkedStates.put(goal, false);
         }
+        completed = 0;
     }
 
     @Override
@@ -52,11 +54,12 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             if (checked) {
                 // Move checked goal to the bottom
                 goalsList.remove(goal);
-                goalsList.add(goal);
+                goalsList.add(goalsList.size()-completed++, goal);
             } else {
                 // Move unchecked goal to the top
                 goalsList.remove(goal);
                 goalsList.add(0, goal);
+                completed--;
             }
             notifyDataSetChanged();
 

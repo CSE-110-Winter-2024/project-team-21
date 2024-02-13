@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 String goal = input.getText().toString().trim();
                 if (!TextUtils.isEmpty(goal)) {
-                    goalsList.add(goal);
+                    goalsList.add(0,goal);
                     adapter.notifyDataSetChanged();
                     updateNoGoalsVisibility();
                 } else {
