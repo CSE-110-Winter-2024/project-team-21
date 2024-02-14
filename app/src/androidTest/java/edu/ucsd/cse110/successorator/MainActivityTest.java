@@ -11,7 +11,6 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,14 +22,9 @@ import static junit.framework.TestCase.assertEquals;
 
 import static org.hamcrest.CoreMatchers.not;
 
-import android.content.res.Resources;
-
-import androidx.lifecycle.Lifecycle;
-import androidx.test.core.app.ActivityScenario;
-
 import org.junit.Assert;
 
-import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
+import edu.ucsd.cse110.successorator.app.MainActivity;
 
 /**
  * Instrumented test, which will execute on an Android device.

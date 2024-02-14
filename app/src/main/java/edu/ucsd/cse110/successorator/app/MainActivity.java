@@ -1,4 +1,4 @@
-package edu.ucsd.cse110.successorator;
+package edu.ucsd.cse110.successorator.app;
 
 import android.os.Bundle;
 
@@ -18,11 +18,20 @@ import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import edu.ucsd.cse110.successorator.R;
+import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
+import edu.ucsd.cse110.successorator.lib.data.InMemoryDataSource;
+import edu.ucsd.cse110.successorator.lib.domain.GoalRepository;
+
+
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<String> goalsList;
+
+    private ActivityMainBinding view;
+    private MainViewModel model;
 
     private Consumer<Integer> onCompletionClick;
 
@@ -30,6 +39,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //ADDED
+        setTitle(R.string.app_title);
+
+        var dataSource = InMemoryDataSource.fromDefault();
+        this.model = new MainViewModel(new GoalRepository(dataSource));
+
+        this.view = ActivityMainBinding.inflate(getLayoutInflater());
+
+        setContentView(view.getRoot());
+
+        //END ADDED
 
         // Initialize the list of goals
         goalsList = new ArrayList<>();

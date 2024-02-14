@@ -1,4 +1,4 @@
-package edu.ucsd.cse110.successorator;
+package edu.ucsd.cse110.successorator.app;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -6,11 +6,13 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import edu.ucsd.cse110.successorator.R;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 

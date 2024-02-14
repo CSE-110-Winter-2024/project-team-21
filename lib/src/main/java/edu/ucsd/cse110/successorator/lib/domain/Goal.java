@@ -9,19 +9,16 @@ import java.util.Objects;
 /**
  * Just a dummy domain model that does nothing in particular. Delete me.
  */
-public class Dummy {
+public class Goal {
     private final @Nullable Integer id;
-    private final @Nullable String foo;
-    private final @NotNull String bar;
+    private final @Nullable String goalText;
 
-    public Dummy(
+    public Goal(
         @Nullable Integer id,
-        @Nullable String foo,
-        @NotNull String bar
+        @Nullable String goalText
     ) {
         this.id = id;
-        this.foo = foo;
-        this.bar = bar;
+        this.goalText = goalText;
     }
 
     @Nullable
@@ -30,25 +27,20 @@ public class Dummy {
     }
 
     @Nullable
-    public String getFoo() {
-        return foo;
-    }
-
-    @NotNull
-    public String getBar() {
-        return bar;
+    public String getGoalText() {
+        return goalText;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Dummy dummy = (Dummy) o;
-        return Objects.equals(id, dummy.id) && Objects.equals(foo, dummy.foo) && Objects.equals(bar, dummy.bar);
+        Goal goal = (Goal) o;
+        return Objects.equals(id, goal.id) && Objects.equals(goalText, goal.goalText);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, foo, bar);
+        return Objects.hash(id, goalText);
     }
 }

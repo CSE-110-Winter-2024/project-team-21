@@ -3,5 +3,6 @@
     <string name="placeholder">Placeholder</string>
     <string name="hello_world">yeah</string>
     <string name="no_goals_for_the_day">No goals for the day</string>
+    <string name="app_title">Successorator</string>
 
 </resources>
