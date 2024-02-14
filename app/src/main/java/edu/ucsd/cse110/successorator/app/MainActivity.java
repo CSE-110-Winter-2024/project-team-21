@@ -2,9 +2,15 @@ package edu.ucsd.cse110.successorator.app;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import java.util.ArrayList;
@@ -33,46 +39,51 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding view;
     private MainViewModel model;
 
-    private Consumer<Integer> onCompletionClick;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        //setContentView(R.layout.activity_main);
 
         //ADDED
         setTitle(R.string.app_title);
 
-        var dataSource = InMemoryDataSource.fromDefault();
-        this.model = new MainViewModel(new GoalRepository(dataSource));
-
-        this.view = ActivityMainBinding.inflate(getLayoutInflater());
-
-        setContentView(view.getRoot());
-
-        //END ADDED
-
-        // Initialize the list of goals
-        goalsList = new ArrayList<>();
-
+        var modelOwner = this;
+        var modelFactory = ViewModelProvider.Factory.from(MainViewModel.initializer);
+        var modelProvider = new ViewModelProvider(modelOwner, modelFactory);
+        this.model = modelProvider.get(MainViewModel.class);
         // Find views
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList, onCompletionClick);
+        adapter = new GoalsAdapter(goalsList);
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        // Set OnClickListener for FloatingActionButton to add new goals
-        findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddGoalDialog();
-            }
-        });
+
+
+        setContentView(view.getRoot());
+
+        //END ADDED
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.action_bar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        var itemId = item.getItemId();
+
+        if (itemId == R.id.action_bar_menu_add_goal) {
+            showAddGoalDialog();
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void showAddGoalDialog() {

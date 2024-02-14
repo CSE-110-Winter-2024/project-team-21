@@ -21,6 +21,11 @@ public class InMemoryDataSource {
     private final SimpleSubject<List<Goal>> allGoalsSubject
             = new SimpleSubject<>();
 
+    private static final Map<String, Boolean> checkedStates
+            = new HashMap<>();
+
+    private static int numCompletedGoals;
+
     public InMemoryDataSource() {
     }
 
@@ -67,6 +72,11 @@ public class InMemoryDataSource {
         for (Goal goal : DEFAULT_GOALS) {
             data.putGoal(goal);
         }
+        // Initialize all goals as unchecked
+        for (Goal goal : DEFAULT_GOALS) {
+            checkedStates.put(goal.getGoalText(), false);
+        }
+        numCompletedGoals = 0;
         return data;
     }
 }

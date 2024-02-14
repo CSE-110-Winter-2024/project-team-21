@@ -17,18 +17,11 @@ import edu.ucsd.cse110.successorator.R;
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
     private List<String> goalsList;
-    private Map<String, Boolean> checkedStates = new HashMap<>();
-    private int completed;
     Consumer<Integer> onCompletionClick;
 
-    public GoalsAdapter(List<String> goalsList, Consumer<Integer> onCompletionClick) {
+    public GoalsAdapter(List<String> goalsList) {
         this.goalsList = goalsList;
         this.onCompletionClick = onCompletionClick;
-        // Initialize all goals as unchecked
-        for (String goal : goalsList) {
-            checkedStates.put(goal, false);
-        }
-        completed = 0;
     }
 
     @Override
@@ -41,7 +34,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     public void onBindViewHolder(ViewHolder holder, int position) {
         String goal = goalsList.get(position);
         holder.goalTextView.setText(goal);
-        boolean isChecked = checkedStates.getOrDefault(goal, false);
+        /*boolean isChecked = checkedStates.getOrDefault(goal, false);
         holder.goalCheckBox.setChecked(isChecked);
 
         if (isChecked) {
@@ -65,7 +58,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             }
             notifyDataSetChanged();
 
-        });
+        });*/
     }
 
     @Override

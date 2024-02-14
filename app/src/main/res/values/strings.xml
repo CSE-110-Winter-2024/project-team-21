@@ -4,5 +4,8 @@
     <string name="hello_world">yeah</string>
     <string name="no_goals_for_the_day">No goals for the day</string>
     <string name="app_title">Successorator</string>
+    <string name="add_goal">Add a goal</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
