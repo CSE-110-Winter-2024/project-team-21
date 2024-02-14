@@ -17,7 +17,10 @@ public class GoalEntity {
     @ColumnInfo(name = "goalText")
     public String goalText;
 
-    GoalEntity(@NonNull String goalText) {
+
+
+    public GoalEntity(@NonNull String goalText) {
+
         this.goalText = goalText;
     }
 

@@ -19,6 +19,8 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     private int completed;
     Consumer<Integer> onCompletionClick;
 
+
+
     public GoalsAdapter(List<String> goalsList, Consumer<Integer> onCompletionClick) {
         this.goalsList = goalsList;
         this.onCompletionClick = onCompletionClick;
@@ -51,6 +53,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         holder.goalCheckBox.setOnClickListener(v -> {
             boolean checked = holder.goalCheckBox.isChecked();
             checkedStates.put(goal, checked);
+
             if (checked) {
                 // Move checked goal to the bottom
                 goalsList.remove(goal);
