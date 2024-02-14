@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 String goal = input.getText().toString().trim();
                 if (!TextUtils.isEmpty(goal)) {
-                    goalsList.add(0, new Goal(model.getGoalCount()+1,goal));
+                    goalsList.add(0, new Goal(model.getGoalCount(),goal));
                     adapter.notifyDataSetChanged();
                     updateNoGoalsVisibility();
                 } else {
