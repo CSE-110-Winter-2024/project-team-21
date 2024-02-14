@@ -1,27 +1,28 @@
-package edu.ucsd.cse110.successorator.app;
-import android.graphics.Paint;
+package edu.ucsd.cse110.successorator.app.ui.list;
+
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
+import android.widget.ArrayAdapter;
 
-import java.util.HashMap;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.ucsd.cse110.successorator.R;
+import edu.ucsd.cse110.successorator.lib.domain.Goal;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
-    private List<String> goalsList;
-    Consumer<Integer> onCompletionClick;
+    private List<Goal> goalsList;
 
-    public GoalsAdapter(List<String> goalsList) {
+    public GoalsAdapter(List<Goal> goalsList) {
         this.goalsList = goalsList;
-        this.onCompletionClick = onCompletionClick;
     }
 
     @Override
@@ -32,7 +33,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String goal = goalsList.get(position);
+        String goal = goalsList.get(position).getGoalText();
         holder.goalTextView.setText(goal);
         /*boolean isChecked = checkedStates.getOrDefault(goal, false);
         holder.goalCheckBox.setChecked(isChecked);

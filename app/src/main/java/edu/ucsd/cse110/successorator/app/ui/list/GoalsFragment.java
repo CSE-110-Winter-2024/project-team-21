@@ -1,60 +1,75 @@
-package edu.ucsd.cse110.successorator.app.ui.study;
+package edu.ucsd.cse110.successorator.app.ui.list;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.ucsd.cse110.successorator.R;
 import edu.ucsd.cse110.successorator.app.MainViewModel;
-import edu.ucsd.cse110.successorator.databinding.FragmentGoalsBinding;
+import edu.ucsd.cse110.successorator.databinding.FragmentGoalListBinding;
 
 public class GoalsFragment extends Fragment {
-    private MainViewModel activityModel; // NEW FIELD
-    private FragmentGoalsBinding view;
-
+    private TextView noGoalsTextView;
+    private RecyclerView recyclerView;
+    private FragmentGoalListBinding view;
+    private MainViewModel activityModel;
+    private GoalsAdapter adapter;
     public GoalsFragment() {
-        // Required empty public constructor
+
     }
 
-    public static edu.ucsd.cse110.successorator.app.ui.study.GoalsFragment newInstance() {
-        edu.ucsd.cse110.successorator.app.ui.study.GoalsFragment fragment = new edu.ucsd.cse110.successorator.app.ui.study.GoalsFragment();
+    public static GoalsFragment newInstance() {
+        GoalsFragment fragment = new GoalsFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Initialize the Model
         var modelOwner = requireActivity();
         var modelFactory = ViewModelProvider.Factory.from(MainViewModel.initializer);
         var modelProvider = new ViewModelProvider(modelOwner, modelFactory);
         this.activityModel = modelProvider.get(MainViewModel.class);
+
+        this.adapter = new GoalsAdapter(List.of());
+
+        activityModel.getOrderedGoals().observe(newGoals -> {
+            if(newGoals == null) return;
+            adapter.notifyDataSetChanged();;
+        });
     }
 
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Initialize the View
-        view = FragmentGoalsBinding.inflate(inflater, container, false);
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
+        this.view = FragmentGoalListBinding.inflate(inflater, container, false);
 
-        //setupMvp();
+        // Find views using View Binding
+        recyclerView = view.goalsRecyclerView;
+        noGoalsTextView = view.noGoalsText;
 
+        // Set the layout manager and adapter on the RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setAdapter(adapter);
         return view.getRoot();
     }
-
-    /*private void setupMvp() {
-        // Observe Model -> call View
-        activityModel.getDisplayedText().observe(text -> view.cardText.setText(text));
-
-        // Observe View -> call Model
-        view.card.setOnClickListener(v -> activityModel.flipTopCard());
-        view.nextButton.setOnClickListener(v -> activityModel.stepForward());
-        view.prevButton.setOnClickListener(v -> activityModel.stepBackward());
-        view.shuffleButton.setOnClickListener(v -> activityModel.shuffle());
-    }*/
 }

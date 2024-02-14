@@ -4,7 +4,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,9 +12,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import java.util.ArrayList;
+
 import java.util.List;
-import java.util.function.Consumer;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -25,16 +23,16 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import edu.ucsd.cse110.successorator.R;
+import edu.ucsd.cse110.successorator.app.ui.list.GoalsAdapter;
 import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
-import edu.ucsd.cse110.successorator.lib.data.InMemoryDataSource;
-import edu.ucsd.cse110.successorator.lib.domain.GoalRepository;
+import edu.ucsd.cse110.successorator.lib.domain.Goal;
 
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
-    private List<String> goalsList;
+    private List<Goal> goalsList;
 
     private ActivityMainBinding view;
     private MainViewModel model;
@@ -47,23 +45,7 @@ public class MainActivity extends AppCompatActivity {
         //ADDED
         setTitle(R.string.app_title);
 
-        var modelOwner = this;
-        var modelFactory = ViewModelProvider.Factory.from(MainViewModel.initializer);
-        var modelProvider = new ViewModelProvider(modelOwner, modelFactory);
-        this.model = modelProvider.get(MainViewModel.class);
-        // Find views
-        recyclerView = findViewById(R.id.goals_recycler_view);
-        noGoalsTextView = findViewById(R.id.no_goals_text);
-
-        // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList);
-
-        // Set the layout manager and adapter on the RecyclerView
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
-
-
-
+        this.view = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(view.getRoot());
 
         //END ADDED
@@ -86,6 +68,14 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void updateNoGoalsVisibility() {
+        if (goalsList.isEmpty()) {
+            noGoalsTextView.setVisibility(View.VISIBLE);
+        } else {
+            noGoalsTextView.setVisibility(View.GONE);
+        }
+    }
+
     private void showAddGoalDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
@@ -103,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 String goal = input.getText().toString().trim();
                 if (!TextUtils.isEmpty(goal)) {
-                    goalsList.add(0,goal);
+                    goalsList.add(0, new Goal(model.getGoalCount()+1,goal));
                     adapter.notifyDataSetChanged();
                     updateNoGoalsVisibility();
                 } else {
@@ -120,13 +110,5 @@ public class MainActivity extends AppCompatActivity {
         });
 
         builder.show();
-    }
-
-    private void updateNoGoalsVisibility() {
-        if (goalsList.isEmpty()) {
-            noGoalsTextView.setVisibility(View.VISIBLE);
-        } else {
-            noGoalsTextView.setVisibility(View.GONE);
-        }
     }
 }

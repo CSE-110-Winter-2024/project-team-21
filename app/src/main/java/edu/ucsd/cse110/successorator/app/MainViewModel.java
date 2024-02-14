@@ -17,7 +17,6 @@ import edu.ucsd.cse110.successorator.lib.util.Subject;
 public class MainViewModel extends ViewModel{
     // Domain state (true "Model" state)
     private final GoalRepository goalRepository;
-
     // UI state
     private final SimpleSubject<List<Integer>> goalOrdering;
     private final SimpleSubject<List<Goal>> orderedGoals;
@@ -82,8 +81,10 @@ public class MainViewModel extends ViewModel{
 
     public Subject<String> getGoalText() {
         return goalText;
+    }
 
-
+    public int getGoalCount() {
+        return goalRepository.count();
     }
 
     /*public void flipTopCard() {
