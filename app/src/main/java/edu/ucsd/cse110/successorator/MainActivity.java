@@ -1,17 +1,19 @@
 package edu.ucsd.cse110.successorator;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
@@ -21,32 +23,32 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
+    private TextView dateTextView;
+
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<String> goalsList;
-    private GoalFinished goalFinished;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        goalFinished = new GoalFinished(this);
-
         // Initialize the list of goals
         goalsList = new ArrayList<>();
 
         // Find views
+        dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList,this, goalFinished);
+        adapter = new GoalsAdapter(goalsList);
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        updateDate();
 
         // Set OnClickListener for FloatingActionButton to add new goals
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
                 showAddGoalDialog();
             }
         });
+
     }
 
     private void showAddGoalDialog() {
@@ -62,6 +65,10 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Add Goal");
 
         final EditText input = new EditText(this);
+
+        // Assign the ID to the EditText
+        input.setId(R.id.edit_text_goal_id);
+
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
@@ -95,5 +102,14 @@ public class MainActivity extends AppCompatActivity {
         } else {
             noGoalsTextView.setVisibility(View.GONE);
         }
+    }
+    private void updateDate() {
+        // Get the current date
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
+        String currentDate = dateFormat.format(calendar.getTime());
+
+        // Update the TextView with the current date
+        dateTextView.setText(currentDate);
     }
 }
