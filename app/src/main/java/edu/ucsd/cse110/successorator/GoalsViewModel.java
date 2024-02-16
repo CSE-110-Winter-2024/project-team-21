@@ -1,58 +1,61 @@
 package edu.ucsd.cse110.successorator;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GoalsViewModel extends ViewModel {
-    private MutableLiveData<List<String>> goalsList;
-    private List<String> checkedOffGoals; // Assuming you're storing checked off goals
+    private MutableLiveData<Map<String, Boolean>> goalsMap; // Map to store goals with their completion status
 
     public GoalsViewModel() {
-        goalsList = new MutableLiveData<>();
-        goalsList.setValue(new ArrayList<>()); // Initialize with an empty list
-        checkedOffGoals = new ArrayList<>(); // Initialize the list of checked off goals
+        goalsMap = new MutableLiveData<>();
+        goalsMap.setValue(new HashMap<>()); // Initialize with an empty map
     }
 
-    public LiveData<List<String>> getGoalsList() {
-        return goalsList;
+    // Method to get the LiveData object containing the map of goals
+    public LiveData<Map<String, Boolean>> getGoalsMap() {
+        return goalsMap;
     }
 
+    // Method to add a new goal with completion status to the map
     public void addGoal(String goal) {
-        List<String> currentList = goalsList.getValue();
-        currentList.add(goal);
-        goalsList.setValue(currentList);
-    }
-
-    public void clearCheckedMITs() {
-        List<String> currentList = goalsList.getValue();
-        List<String> updatedList = new ArrayList<>();
-
-        for (String goal : currentList) {
-            // Add the goal to the updated list if it's not checked off
-            if (!isGoalCheckedOff(goal)) {
-                updatedList.add(goal);
-            }
+        Map<String, Boolean> currentMap = goalsMap.getValue();
+        if (currentMap == null) {
+            currentMap = new HashMap<>();
         }
-
-        goalsList.setValue(updatedList);
+        // Add the goal with initial completion status (false)
+        currentMap.put(goal, false);
+        goalsMap.setValue(currentMap);
     }
 
-    private boolean isGoalCheckedOff(String goal) {
-        // Check if the goal exists in the list of checked off goals
-        return checkedOffGoals.contains(goal);
-    }
-
-    // This method allows other classes to mark a goal as checked off
+    // Method to mark a goal as checked off
     public void markGoalAsCheckedOff(String goal) {
-        checkedOffGoals.add(goal);
+        Map<String, Boolean> currentMap = goalsMap.getValue();
+        if (currentMap != null && currentMap.containsKey(goal)) {
+            currentMap.put(goal, true); // Update completion status to true
+            goalsMap.setValue(currentMap);
+        }
     }
 
-    // This method allows other classes to mark a goal as not checked off
-    public void markGoalAsNotCheckedOff(String goal) {
-        checkedOffGoals.remove(goal);
+    // Method to clear checked off goals
+    public void clearCheckedGoals() {
+        Map<String, Boolean> currentMap = goalsMap.getValue();
+        if (currentMap != null) {
+            // Create a new map to store unchecked goals
+            Map<String, Boolean> uncheckedGoals = new HashMap<>();
+            for (Map.Entry<String, Boolean> entry : currentMap.entrySet()) {
+                // Copy unchecked goals to the new map
+                if (!entry.getValue()) {
+                    uncheckedGoals.put(entry.getKey(), false);
+                }
+            }
+            // Update the LiveData with the map of unchecked goals
+            goalsMap.setValue(uncheckedGoals);
+        }
     }
 }
-

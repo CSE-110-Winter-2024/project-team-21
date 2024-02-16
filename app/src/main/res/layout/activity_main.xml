@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/forwardTime"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -7,10 +8,18 @@
 
     <!-- TextView for 'No Goals for the Day' message -->
 
+    <Button
+        android:id="@+id/forwardButton"
+        android:layout_width="wrap_content"
+        android:layout_height="72dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="1dp"
+        android:text="->" />
+
     <TextView
         android:id="@+id/DateText"
-        android:layout_width="match_parent"
-        android:layout_height="68dp"
+        android:layout_width="314dp"
+        android:layout_height="74dp"
         android:text="TextView" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -27,9 +36,9 @@
         android:id="@+id/no_goals_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
         android:text="@string/no_goals_for_the_day"
-        android:textSize="30sp"
-        android:layout_centerInParent="true" />
+        android:textSize="30sp" />
 
     <!-- RecyclerView for listing the goals -->
     <androidx.recyclerview.widget.RecyclerView
