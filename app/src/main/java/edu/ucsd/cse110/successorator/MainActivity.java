@@ -43,10 +43,7 @@ public class MainActivity extends AppCompatActivity {
         goalDao = db.goalDao();
 
         goalDao.getAllGoals().observe(this, goalEntities -> {
-
-
             Collections.sort(goalEntities, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
-
             List<String> sortedGoalTexts = goalEntities.stream()
                     .map(goalEntity -> goalEntity.goalText)
                     .collect(Collectors.toList());

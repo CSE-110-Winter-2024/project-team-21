@@ -18,7 +18,6 @@ import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
     private List<String> goalsList;
-    private Map<String, Boolean> checkedStates = new HashMap<>();
     Consumer<Integer> onCompletionClick;
 
     GoalDao goalDao;
@@ -29,10 +28,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         this.goalsList = goalsList;
         this.onCompletionClick = onCompletionClick;
         this.goalDao = goalDao;
-        // Initialize all goals as unchecked
-        for (String goal : goalsList) {
-            checkedStates.put(goal, false);
-        }
+
     }
 
     public void updateGoals(List<String> newGoals) {
