@@ -6,10 +6,9 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
@@ -17,25 +16,21 @@ import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
-    private List<String> goalsList;
-    Consumer<Integer> onCompletionClick;
-
+    private List<GoalEntity> goalsList;
     GoalDao goalDao;
 
 
 
-    public GoalsAdapter(List<String> goalsList, Consumer<Integer> onCompletionClick, GoalDao goalDao) {
+    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
         this.goalsList = goalsList;
-        this.onCompletionClick = onCompletionClick;
         this.goalDao = goalDao;
-
     }
 
-    public void updateGoals(List<String> newGoals) {
+    public void updateGoals(List<GoalEntity> newGoals) {
+        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
         this.goalsList = newGoals;
         notifyDataSetChanged();
     }
-
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -45,7 +40,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String goalText = goalsList.get(position);
+        String goalText = goalsList.get(position).goalText;
         GoalEntity goalEntity = goalDao.findByGoalText(goalText);
         boolean isChecked = goalEntity.isChecked;
 
@@ -62,10 +57,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             boolean checked = holder.goalCheckBox.isChecked();
             goalEntity.isChecked = checked;
 
-            new Thread(() -> {
-                goalDao.update(goalEntity);
-            }).start();
-
+            goalDao.update(goalEntity);
             notifyDataSetChanged();
         });
     }

@@ -25,13 +25,18 @@ import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 public class MainActivity extends AppCompatActivity {
+
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
-    private List<String> goalsList = new ArrayList<>();
+    private List<GoalEntity> goalsList = new ArrayList<>();
     private AppDatabase db;
+    private AppDatabase completed;
+    private AppDatabase uncompleted;
     private GoalDao goalDao;
-    private Consumer<Integer> onCompletionClick;
+    private GoalDao completedDao;
+    private GoalDao uncompletedDao;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,28 +44,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "database-name").allowMainThreadQueries().build();
+                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
         goalDao = db.goalDao();
-
-        goalDao.getAllGoals().observe(this, goalEntities -> {
-            Collections.sort(goalEntities, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
-            List<String> sortedGoalTexts = goalEntities.stream()
-                    .map(goalEntity -> goalEntity.goalText)
-                    .collect(Collectors.toList());
-
-            goalsList = new ArrayList<>(sortedGoalTexts);
-
-            adapter.updateGoals(sortedGoalTexts);
-            updateNoGoalsVisibility();
-        });
-
-
+        completed = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
+        completedDao = completed.goalDao();
+        uncompleted = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
+        uncompletedDao = completed.goalDao();
 
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-        adapter = new GoalsAdapter(goalsList, onCompletionClick, goalDao);
+        adapter = new GoalsAdapter(goalsList, goalDao);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+
+        goalDao.getAllGoals().observe(this, goalEntities -> {
+            adapter.updateGoals(goalEntities);
+            updateNoGoalsVisibility();
+        });
 
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateNoGoalsVisibility() {
-        if (goalsList.isEmpty()) {
+        if (goalDao.isItEmpty() == null) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
