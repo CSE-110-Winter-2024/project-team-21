@@ -1,62 +1,80 @@
 package edu.ucsd.cse110.successorator;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
-
     private List<String> goalsList;
+    private List<Boolean> completionStatusList;
+    private GoalsViewModel goalsViewModel;
 
-    // Constructor to initialize the adapter with a list of goals
-    public GoalsAdapter(List<String> goalsList) {
+    public GoalsAdapter(List<String> goalsList, List<Boolean> completionStatusList, GoalsViewModel viewModel) {
         this.goalsList = goalsList;
+        this.completionStatusList = completionStatusList;
+        this.goalsViewModel = viewModel;
     }
 
-    // Create new views (invoked by the layout manager)
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Create a new view by inflating the layout for a single item
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_goal, parent, false);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_goal, parent, false);
         return new ViewHolder(view);
     }
 
-    // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        // Get the goal at the specified position in the list
-        String goal = goalsList.get(position);
-        // Bind the goal text to the TextView in the ViewHolder
-        holder.goalTextView.setText(goal); // Bind the goal text to the TextView, etc.
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        String goal = goalsList.get(holder.getAdapterPosition()); // Get the current position using getAdapterPosition()
+        boolean isChecked = completionStatusList.get(holder.getAdapterPosition()); // Get completion status using the current position
+
+        holder.goalTextView.setText(goal);
+        holder.goalCheckBox.setChecked(isChecked);
+
+        holder.goalCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                int adapterPosition = holder.getAdapterPosition(); // Get the current adapter position
+                if (adapterPosition != RecyclerView.NO_POSITION) { // Check if position is valid
+                    completionStatusList.set(adapterPosition, isChecked);
+                    // Notify the ViewModel about the checkbox change
+                    String goal = goalsList.get(adapterPosition);
+                    if (isChecked) {
+                        goalsViewModel.markGoalAsCheckedOff(goal);
+                    } else {
+                        goalsViewModel.markGoalAsNotCheckedOff(goal);
+                    }
+                }
+            }
+        });
     }
 
-    // Return the size of your dataset (invoked by the layout manager)
+
     @Override
     public int getItemCount() {
         return goalsList.size();
     }
 
-    // Provide a reference to the views for each data item
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        // Define the ViewHolder with member variables for any views that will be set as the rows are rendered.
-        // In this case, there is a TextView to display the goal text
         TextView goalTextView;
+        CheckBox goalCheckBox;
 
-        // Constructor to initialize the ViewHolder with the provided view
-        public ViewHolder(View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Initialize the views using findViewById
-            goalTextView = itemView.findViewById(R.id.goal_text_view); // Replace R.id.goal_text_view with the actual ID of your TextView in item_goal.xml
+            goalTextView = itemView.findViewById(R.id.goal_text_view);
+            goalCheckBox = itemView.findViewById(R.id.goal_checkbox);
         }
     }
-    // Method to update the list of goals in the adapter
+
     public void setGoalsList(List<String> goalsList) {
         this.goalsList = goalsList;
         notifyDataSetChanged(); // Notify the adapter that the data has changed
     }
+
 }

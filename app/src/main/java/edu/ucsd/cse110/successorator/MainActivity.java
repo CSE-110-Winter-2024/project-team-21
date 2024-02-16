@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(null);
+        adapter = new GoalsAdapter(new ArrayList<>(), new ArrayList<>(), goalsViewModel);
+
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
