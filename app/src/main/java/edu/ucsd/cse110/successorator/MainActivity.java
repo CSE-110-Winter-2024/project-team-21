@@ -9,8 +9,11 @@ import androidx.room.Room;
 import android.view.View;
 import android.widget.TextView;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
@@ -39,21 +42,26 @@ public class MainActivity extends AppCompatActivity {
                 AppDatabase.class, "database-name").allowMainThreadQueries().build();
         goalDao = db.goalDao();
 
-        goalDao.getAllGoals().observe(this, new Observer<List<GoalEntity>>() {
-            @Override
-            public void onChanged(List<GoalEntity> goalEntities) {
-                goalsList.clear();
-                for (GoalEntity entity : goalEntities) {
-                    goalsList.add(entity.goalText);
-                }
-                adapter.notifyDataSetChanged();
-                updateNoGoalsVisibility();
-            }
+        goalDao.getAllGoals().observe(this, goalEntities -> {
+
+
+            Collections.sort(goalEntities, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
+
+            List<String> sortedGoalTexts = goalEntities.stream()
+                    .map(goalEntity -> goalEntity.goalText)
+                    .collect(Collectors.toList());
+
+            goalsList = new ArrayList<>(sortedGoalTexts);
+
+            adapter.updateGoals(sortedGoalTexts);
+            updateNoGoalsVisibility();
         });
+
+
 
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-        adapter = new GoalsAdapter(goalsList, onCompletionClick);
+        adapter = new GoalsAdapter(goalsList, onCompletionClick, goalDao);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
@@ -82,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            goalDao.insert(new GoalEntity(goalText));
+                            goalDao.insert(new GoalEntity(goalText, false));
                         }
                     }).start();
                 } else {

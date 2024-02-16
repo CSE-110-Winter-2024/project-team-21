@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import edu.ucsd.cse110.successorator.data.db.GoalDao;
+import edu.ucsd.cse110.successorator.data.db.GoalEntity;
+
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
     private List<String> goalsList;
@@ -19,17 +22,26 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     private int completed;
     Consumer<Integer> onCompletionClick;
 
+    GoalDao goalDao;
 
 
-    public GoalsAdapter(List<String> goalsList, Consumer<Integer> onCompletionClick) {
+
+    public GoalsAdapter(List<String> goalsList, Consumer<Integer> onCompletionClick, GoalDao goalDao) {
         this.goalsList = goalsList;
         this.onCompletionClick = onCompletionClick;
+        this.goalDao = goalDao;
         // Initialize all goals as unchecked
         for (String goal : goalsList) {
             checkedStates.put(goal, false);
         }
         completed = 0;
     }
+
+    public void updateGoals(List<String> newGoals) {
+        this.goalsList = newGoals;
+        notifyDataSetChanged();
+    }
+
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -39,9 +51,11 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String goal = goalsList.get(position);
-        holder.goalTextView.setText(goal);
-        boolean isChecked = checkedStates.getOrDefault(goal, false);
+        String goalText = goalsList.get(position);
+        GoalEntity goalEntity = goalDao.findByGoalText(goalText);
+        boolean isChecked = goalEntity.isChecked;
+
+        holder.goalTextView.setText(goalText);
         holder.goalCheckBox.setChecked(isChecked);
 
         if (isChecked) {
@@ -52,22 +66,22 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
         holder.goalCheckBox.setOnClickListener(v -> {
             boolean checked = holder.goalCheckBox.isChecked();
-            checkedStates.put(goal, checked);
+            goalEntity.isChecked = checked;
 
+            new Thread(() -> {
+                goalDao.update(goalEntity);
+            }).start();
             if (checked) {
-                // Move checked goal to the bottom
-                goalsList.remove(goal);
-                goalsList.add(goalsList.size()-completed++, goal);
+                goalsList.remove(position);
+                goalsList.add(goalEntity.goalText);
             } else {
-                // Move unchecked goal to the top
-                goalsList.remove(goal);
-                goalsList.add(0, goal);
-                completed--;
+                goalsList.remove(position);
+                goalsList.add(0, goalEntity.goalText);
             }
             notifyDataSetChanged();
-
         });
     }
+
 
     @Override
     public int getItemCount() {

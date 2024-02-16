@@ -17,11 +17,16 @@ public class GoalEntity {
     @ColumnInfo(name = "goalText")
     public String goalText;
 
+    @ColumnInfo(name = "isChecked")
+    public boolean isChecked;
 
 
-    public GoalEntity(@NonNull String goalText) {
 
+    public GoalEntity(String goalText, boolean isChecked) {
         this.goalText = goalText;
+        this.isChecked = isChecked;
     }
+
+
 
 }
