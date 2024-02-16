@@ -127,12 +127,7 @@ public class MainActivity extends AppCompatActivity {
         // Update the TextView with the current date
         dateTextView.setText(currentDate);
     }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Unregister the BroadcastReceiver
-        unregisterReceiver(dateChangeReceiver);
-    }
+
     // BroadcastReceiver to detect date changes
     private BroadcastReceiver dateChangeReceiver = new BroadcastReceiver() {
         @Override
