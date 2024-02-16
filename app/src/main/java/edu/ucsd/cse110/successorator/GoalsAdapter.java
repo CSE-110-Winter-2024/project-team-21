@@ -19,7 +19,6 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     private List<String> goalsList;
     private Map<String, Boolean> checkedStates = new HashMap<>();
-    private int completed;
     Consumer<Integer> onCompletionClick;
 
     GoalDao goalDao;
@@ -34,7 +33,6 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         for (String goal : goalsList) {
             checkedStates.put(goal, false);
         }
-        completed = 0;
     }
 
     public void updateGoals(List<String> newGoals) {
@@ -71,13 +69,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             new Thread(() -> {
                 goalDao.update(goalEntity);
             }).start();
-            if (checked) {
-                goalsList.remove(position);
-                goalsList.add(goalEntity.goalText);
-            } else {
-                goalsList.remove(position);
-                goalsList.add(0, goalEntity.goalText);
-            }
+
             notifyDataSetChanged();
         });
     }
