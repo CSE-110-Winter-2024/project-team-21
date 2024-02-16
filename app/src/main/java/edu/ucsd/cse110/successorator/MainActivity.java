@@ -31,11 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private GoalsAdapter adapter;
     private List<GoalEntity> goalsList = new ArrayList<>();
     private AppDatabase db;
-    private AppDatabase completed;
-    private AppDatabase uncompleted;
     private GoalDao goalDao;
-    private GoalDao completedDao;
-    private GoalDao uncompletedDao;
 
 
     @Override
@@ -46,12 +42,6 @@ public class MainActivity extends AppCompatActivity {
         db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
         goalDao = db.goalDao();
-        completed = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
-        completedDao = completed.goalDao();
-        uncompleted = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
-        uncompletedDao = completed.goalDao();
 
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
