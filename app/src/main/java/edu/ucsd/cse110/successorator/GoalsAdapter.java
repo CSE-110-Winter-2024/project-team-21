@@ -54,4 +54,9 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             goalTextView = itemView.findViewById(R.id.goal_text_view); // Replace R.id.goal_text_view with the actual ID of your TextView in item_goal.xml
         }
     }
+    // Method to update the list of goals in the adapter
+    public void setGoalsList(List<String> goalsList) {
+        this.goalsList = goalsList;
+        notifyDataSetChanged(); // Notify the adapter that the data has changed
+    }
 }
