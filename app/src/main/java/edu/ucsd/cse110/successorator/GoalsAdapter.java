@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
@@ -79,12 +80,28 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             if (position != RecyclerView.NO_POSITION) {
                 String goal = goalsList.get(position);
                 goalsViewModel.markGoalAsCheckedOff(goal);
-                goalsViewModel.removeCheckedOffGoals(); // Remove checked-off goals from the list
-                goalsList.remove(position); // Remove the checked goal from the list
-                notifyItemRemoved(position); // Notify adapter about the item removal
+//                goalsViewModel.removeCheckedOffGoals(); // Remove checked-off goals from the list
+//                goalsList.remove(position); // Remove the checked goal from the list
+//                notifyItemRemoved(position); // Notify adapter about the item removal
             }
         }
 
+    }
+//    public void removeCheckedOffGoals() {
+//        goalsViewModel.removeCheckedOffGoals();
+//        notifyDataSetChanged(); // Notify adapter about the changes
+//    }
+    public void removeCheckedOffGoals() {
+        for (String goal : goalsList) {
+            int position = goalsList.indexOf(goal);
+            // Add the goal to the updated list if it's not checked off
+            if (goalsViewModel.isGoalCheckedOff(goal)) {
+                goalsList.remove(position); // Remove the checked goal from the list
+                notifyItemRemoved(position); // Notify adapter about the item removal
+
+            }
+        }
+        notifyDataSetChanged(); // Notify adapter about the changes
     }
 
     public void setGoalsList(List<String> goalsList) {
