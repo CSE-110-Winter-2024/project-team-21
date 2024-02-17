@@ -40,17 +40,19 @@ public class GoalsViewModel extends ViewModel {
     public void markGoalAsNotCheckedOff(String goal) {
         checkedOffGoals.remove(goal);    }
 
-    public void removeCheckedOffGoals() {
-        List<String> currentList = goalsList.getValue();
-        List<String> updatedList = new ArrayList<>();
-        for (String goal : currentList) {
-            // Add the goal to the updated list if it's not checked off
-            if (!isCheckedOff(goal)) {
-                updatedList.add(goal);
-            }
-        }
-        goalsList.setValue(updatedList);
-    }
+//    public void removeCheckedOffGoals() {
+//        List<String> currentList = goalsList.getValue();
+//        List<String> updatedList = new ArrayList<>();
+//        for (String goal : currentList) {
+//            // Add the goal to the updated list if it's not checked off
+//            if (!isCheckedOff(goal)) {
+//                updatedList.add(goal);
+//            }
+//        }
+//        goalsList.setValue(updatedList);
+//    }
+
+
     public boolean isGoalCheckedOff(String goal) {
         return checkedOffGoals.contains(goal);
     }
