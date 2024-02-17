@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
         String currentDate = dateFormat.format(calendar.getTime());
         dateTextView.setText(currentDate);
-        goalsViewModel.removeCheckedOffGoals();
+        adapter.removeCheckedOffGoals();
     }
 
     private void showAddGoalDialog() {
@@ -148,16 +148,17 @@ public class MainActivity extends AppCompatActivity {
         dateTextView.setText(currentDate);
     }
 
-
-
-
-
-    /* BroadcastReceiver to detect date changes
-    private BroadcastReceiver dateChangeReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver dateChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // Clear checked off MITs when the date changes
-            goalsViewModel.clearCheckedMITs();
+            if (Intent.ACTION_DATE_CHANGED.equals(intent.getAction())) {
+                // Date has changed, update the UI
+                updateDate();
+                adapter.removeCheckedOffGoals();
+            }
         }
-    };*/
+    };
+
+
+
 }
