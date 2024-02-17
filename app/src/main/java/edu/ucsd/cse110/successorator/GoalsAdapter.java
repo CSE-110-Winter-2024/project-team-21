@@ -3,20 +3,25 @@ package edu.ucsd.cse110.successorator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
     private List<String> goalsList;
+    private GoalsViewModel goalsViewModel;
+
 
     // Constructor to initialize the adapter with a list of goals
-    public GoalsAdapter(List<String> goalsList) {
+    public GoalsAdapter(List<String> goalsList, GoalsViewModel viewModel) {
         this.goalsList = goalsList;
+        this.goalsViewModel = viewModel;
     }
-
     // Create new views (invoked by the layout manager)
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -33,6 +38,20 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         String goal = goalsList.get(position);
         // Bind the goal text to the TextView in the ViewHolder
         holder.goalTextView.setText(goal); // Bind the goal text to the TextView, etc.
+        // Set the checkbox state based on the checked off status
+        holder.goalCheckBox.setChecked(goalsViewModel.isGoalCheckedOff(goal));
+
+        // Set a listener to mark the goal as checked off when the checkbox is checked
+        holder.goalCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    goalsViewModel.markGoalAsCheckedOff(goal);
+                } else {
+                    goalsViewModel.markGoalAsNotCheckedOff(goal);
+                }
+            }
+        });
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -43,15 +62,18 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     // Provide a reference to the views for each data item
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        // Define the ViewHolder with member variables for any views that will be set as the rows are rendered.
-        // In this case, there is a TextView to display the goal text
         TextView goalTextView;
+        CheckBox goalCheckBox;
 
-        // Constructor to initialize the ViewHolder with the provided view
-        public ViewHolder(View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Initialize the views using findViewById
-            goalTextView = itemView.findViewById(R.id.goal_text_view); // Replace R.id.goal_text_view with the actual ID of your TextView in item_goal.xml
+            goalTextView = itemView.findViewById(R.id.goal_text_view);
+            goalCheckBox = itemView.findViewById(R.id.goal_checkbox);
         }
+    }
+
+    public void setGoalsList(List<String> goalsList) {
+        this.goalsList = goalsList;
+        notifyDataSetChanged();
     }
 }

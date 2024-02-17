@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         goalsList = new ArrayList<>();
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList);
+        adapter = new GoalsAdapter(goalsList, checkedOffGoals);
 
         updateDate();
 
