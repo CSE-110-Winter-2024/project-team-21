@@ -30,6 +30,4 @@
         android:layout_height="match_parent"
         android:layout_below="@id/add_goal_button"
         android:visibility="visible" /> <!-- Initially visible -->
-
-
 </RelativeLayout>

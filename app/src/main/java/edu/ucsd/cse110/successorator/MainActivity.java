@@ -1,47 +1,59 @@
 package edu.ucsd.cse110.successorator;
 
 import android.os.Bundle;
-
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 import android.view.View;
 import android.widget.TextView;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
+import edu.ucsd.cse110.successorator.data.db.AppDatabase;
+import edu.ucsd.cse110.successorator.data.db.GoalDao;
+import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 public class MainActivity extends AppCompatActivity {
+
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
-    private List<String> goalsList;
+    private List<GoalEntity> goalsList = new ArrayList<>();
+    private AppDatabase db;
+    private GoalDao goalDao;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize the list of goals
-        goalsList = new ArrayList<>();
+        db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
+        goalDao = db.goalDao();
 
-        // Find views
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-
-        // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList);
-
-        // Set the layout manager and adapter on the RecyclerView
+        adapter = new GoalsAdapter(goalsList, goalDao);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        // Set OnClickListener for FloatingActionButton to add new goals
+        goalDao.getAllGoals().observe(this, goalEntities -> {
+            adapter.updateGoals(goalEntities);
+            updateNoGoalsVisibility();
+        });
+
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -55,39 +67,33 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Add Goal");
 
         final EditText input = new EditText(this);
-
-        // Assign the ID to the EditText
         input.setId(R.id.edit_text_goal_id);
-
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String goal = input.getText().toString().trim();
-                if (!TextUtils.isEmpty(goal)) {
-                    goalsList.add(goal);
-                    adapter.notifyDataSetChanged();
-                    updateNoGoalsVisibility();
+                final String goalText = input.getText().toString().trim();
+                if (!TextUtils.isEmpty(goalText)) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            goalDao.insert(new GoalEntity(goalText, false));
+                        }
+                    }).start();
                 } else {
                     Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
     private void updateNoGoalsVisibility() {
-        if (goalsList.isEmpty()) {
+        if (goalDao.isItEmpty() == null) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
