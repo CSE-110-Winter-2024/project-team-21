@@ -1,5 +1,6 @@
 package edu.ucsd.cse110.successorator;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
@@ -16,19 +18,19 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     private List<String> goalsList;
     private GoalsViewModel goalsViewModel;
 
-
     // Constructor to initialize the adapter with a list of goals
     public GoalsAdapter(List<String> goalsList, GoalsViewModel viewModel) {
         this.goalsList = goalsList;
         this.goalsViewModel = viewModel;
     }
+
     // Create new views (invoked by the layout manager)
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // Create a new view by inflating the layout for a single item
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_goal, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view); // Remove the second argument
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -45,8 +47,9 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         holder.goalCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Log.d("GoalsAdapter", "Checkbox clicked, isChecked: " + isChecked);
                 if (isChecked) {
-                    goalsViewModel.markGoalAsCheckedOff(goal);
+                    holder.markGoalAsCheckedOff(); // Call the new method
                 } else {
                     goalsViewModel.markGoalAsNotCheckedOff(goal);
                 }
@@ -61,7 +64,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     }
 
     // Provide a reference to the views for each data item
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         TextView goalTextView;
         CheckBox goalCheckBox;
 
@@ -70,6 +73,18 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             goalTextView = itemView.findViewById(R.id.goal_text_view);
             goalCheckBox = itemView.findViewById(R.id.goal_checkbox);
         }
+
+        private void markGoalAsCheckedOff() {
+            int position = getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                String goal = goalsList.get(position);
+                goalsViewModel.markGoalAsCheckedOff(goal);
+                goalsViewModel.removeCheckedOffGoals(); // Remove checked-off goals from the list
+                goalsList.remove(position); // Remove the checked goal from the list
+                notifyItemRemoved(position); // Notify adapter about the item removal
+            }
+        }
+
     }
 
     public void setGoalsList(List<String> goalsList) {

@@ -43,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize the GoalsViewModel
+        goalsViewModel = new ViewModelProvider(this).get(GoalsViewModel.class);
+
         // Find views
         dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
@@ -52,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize the list of goals
         goalsList = new ArrayList<>();
 
-        // Initialize the adapter with the list of goals
+        // Initialize the adapter with the list of goals and the GoalsViewModel
         adapter = new GoalsAdapter(goalsList, goalsViewModel);
 
         updateDate();
@@ -75,7 +78,10 @@ public class MainActivity extends AppCompatActivity {
                 advanceTimeByOneDay();
             }
         });
+
+
     }
+
     private void advanceTimeByOneDay() {
         // Get the current date
         Calendar calendar = Calendar.getInstance();
@@ -141,6 +147,10 @@ public class MainActivity extends AppCompatActivity {
         // Update the TextView with the current date
         dateTextView.setText(currentDate);
     }
+
+
+
+
 
     /* BroadcastReceiver to detect date changes
     private BroadcastReceiver dateChangeReceiver = new BroadcastReceiver() {
