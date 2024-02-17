@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<String> goalsList;
+    private GoalsViewModel goalsViewModel;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         goalsList = new ArrayList<>();
 
         // Initialize the adapter with the list of goals
-        adapter = new GoalsAdapter(goalsList, checkedOffGoals);
+        adapter = new GoalsAdapter(goalsList, goalsViewModel);
 
         updateDate();
 
@@ -82,7 +84,9 @@ public class MainActivity extends AppCompatActivity {
         // Update the TextView with the new date
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
         String currentDate = dateFormat.format(calendar.getTime());
-        dateTextView.setText(currentDate);}
+        dateTextView.setText(currentDate);
+        goalsViewModel.removeCheckedOffGoals();
+    }
 
     private void showAddGoalDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
