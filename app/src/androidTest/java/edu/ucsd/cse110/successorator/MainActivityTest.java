@@ -242,6 +242,8 @@ public class MainActivityTest {
         onView(withId(R.id.add_goal_button)).perform(click());
         onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
+        Thread.sleep(1000);
+
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
@@ -252,6 +254,8 @@ public class MainActivityTest {
         //Click the checkbox of goal
         onView(withId(R.id.goals_recycler_view)).perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), clickChildViewWithId(R.id.goal_checkbox)));
         onView(withId(R.id.forwardButton)).perform(click());
+        Thread.sleep(1000);
+
 
         //Check if goalText is deleted
         onView(withText(goalText)).check(doesNotExist());
@@ -271,6 +275,8 @@ public class MainActivityTest {
         Thread.sleep(1000);
 
         onView(withId(R.id.forwardButton)).perform(click());
+        Thread.sleep(1000);
+
 
         onView(withText(goalText)).check(doesNotExist());
         onView(withText(goalText2)).check(doesNotExist());
