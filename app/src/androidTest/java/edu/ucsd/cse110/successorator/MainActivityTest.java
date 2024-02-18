@@ -261,6 +261,8 @@ public class MainActivityTest {
         onView(withId(R.id.add_goal_button)).perform(click());
         onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
+        Thread.sleep(1000);
+
 
         //Click the checkbox of goal
         onView(withId(R.id.goals_recycler_view)).perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), clickChildViewWithId(R.id.goal_checkbox)));
