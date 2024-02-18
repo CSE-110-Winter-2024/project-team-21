@@ -1,5 +1,6 @@
 package edu.ucsd.cse110.successorator;
 
+import android.graphics.Paint;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,21 +9,27 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import java.util.Collections;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.ucsd.cse110.successorator.data.db.GoalDao;
+import edu.ucsd.cse110.successorator.data.db.GoalEntity;
+
 public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> {
 
-    private List<String> goalsList;
+    private List<GoalEntity> goalsList;
+    private GoalDao goalDao;
     private GoalsViewModel goalsViewModel;
 
     // Constructor to initialize the adapter with a list of goals
-    public GoalsAdapter(List<String> goalsList, GoalsViewModel viewModel) {
+    public GoalsAdapter(List<GoalEntity> goalsList, GoalsViewModel viewModel, GoalDao goalDao) {
         this.goalsList = goalsList;
         this.goalsViewModel = viewModel;
+        this.goalDao = goalDao;
     }
 
     // Create new views (invoked by the layout manager)
@@ -38,9 +45,11 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         // Get the goal at the specified position in the list
-        String goal = goalsList.get(position);
+        String goal = goalsList.get(position).getGoalText();
+
         // Bind the goal text to the TextView in the ViewHolder
         holder.goalTextView.setText(goal); // Bind the goal text to the TextView, etc.
+
         // Set the checkbox state based on the checked off status
         holder.goalCheckBox.setChecked(goalsViewModel.isGoalCheckedOff(goal));
 
@@ -78,7 +87,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         private void markGoalAsCheckedOff() {
             int position = getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-                String goal = goalsList.get(position);
+                String goal = goalsList.get(position).getGoalText();
                 goalsViewModel.markGoalAsCheckedOff(goal);
 //                goalsViewModel.removeCheckedOffGoals(); // Remove checked-off goals from the list
 //                goalsList.remove(position); // Remove the checked goal from the list
@@ -92,10 +101,10 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 //        notifyDataSetChanged(); // Notify adapter about the changes
 //    }
     public void removeCheckedOffGoals() {
-        for (String goal : goalsList) {
+        for (GoalEntity goal : goalsList) {
             int position = goalsList.indexOf(goal);
             // Add the goal to the updated list if it's not checked off
-            if (goalsViewModel.isGoalCheckedOff(goal)) {
+            if (goalsViewModel.isGoalCheckedOff(goal.getGoalText())) {
                 goalsList.remove(position); // Remove the checked goal from the list
                 notifyItemRemoved(position); // Notify adapter about the item removal
 
@@ -104,7 +113,13 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         notifyDataSetChanged(); // Notify adapter about the changes
     }
 
-    public void setGoalsList(List<String> goalsList) {
+    public void updateGoals(List<GoalEntity> newGoals) {
+        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
+        this.goalsList = newGoals;
+        notifyDataSetChanged();
+    }
+
+    public void setGoalsList(List<GoalEntity> goalsList) {
         this.goalsList = goalsList;
         notifyDataSetChanged();
     }
