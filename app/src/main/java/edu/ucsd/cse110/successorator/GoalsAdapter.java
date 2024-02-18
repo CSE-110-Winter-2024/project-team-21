@@ -1,19 +1,16 @@
 package edu.ucsd.cse110.successorator;
 
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.util.Collections;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
@@ -23,13 +20,17 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     private List<GoalEntity> goalsList;
     private GoalDao goalDao;
-    private GoalsViewModel goalsViewModel;
 
     // Constructor to initialize the adapter with a list of goals
-    public GoalsAdapter(List<GoalEntity> goalsList, GoalsViewModel viewModel, GoalDao goalDao) {
+    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
         this.goalsList = goalsList;
-        this.goalsViewModel = viewModel;
         this.goalDao = goalDao;
+    }
+
+    public void updateGoals(List<GoalEntity> newGoals) {
+        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
+        this.goalsList = newGoals;
+        notifyDataSetChanged();
     }
 
     // Create new views (invoked by the layout manager)
@@ -64,32 +65,6 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             goalDao.update(goalEntity);
             notifyDataSetChanged();
         });
-
-
-
-
-        //////////////////
-        // Get the goal at the specified position in the list
-        String goal = goalsList.get(position).getGoalText();
-
-        // Bind the goal text to the TextView in the ViewHolder
-        holder.goalTextView.setText(goal); // Bind the goal text to the TextView, etc.
-
-        // Set the checkbox state based on the checked off status
-        holder.goalCheckBox.setChecked(goalsViewModel.isGoalCheckedOff(goal));
-
-        // Set a listener to mark the goal as checked off when the checkbox is checked
-        holder.goalCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d("GoalsAdapter", "Checkbox clicked, isChecked: " + isChecked);
-                if (isChecked) {
-                    holder.markGoalAsCheckedOff(); // Call the new method
-                } else {
-                    goalsViewModel.markGoalAsNotCheckedOff(goal);
-                }
-            }
-        });
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -108,40 +83,11 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             goalTextView = itemView.findViewById(R.id.goal_text_view);
             goalCheckBox = itemView.findViewById(R.id.goal_checkbox);
         }
-
-        private void markGoalAsCheckedOff() {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-                String goal = goalsList.get(position).getGoalText();
-                goalsViewModel.markGoalAsCheckedOff(goal);
-//                goalsViewModel.removeCheckedOffGoals(); // Remove checked-off goals from the list
-//                goalsList.remove(position); // Remove the checked goal from the list
-//                notifyItemRemoved(position); // Notify adapter about the item removal
-            }
-        }
-
     }
-//    public void removeCheckedOffGoals() {
-//        goalsViewModel.removeCheckedOffGoals();
-//        notifyDataSetChanged(); // Notify adapter about the changes
-//    }
+
     public void removeCheckedOffGoals() {
-        for (GoalEntity goal : goalsList) {
-            int position = goalsList.indexOf(goal);
-            // Add the goal to the updated list if it's not checked off
-            if (goalsViewModel.isGoalCheckedOff(goal.getGoalText())) {
-                goalsList.remove(position); // Remove the checked goal from the list
-                notifyItemRemoved(position); // Notify adapter about the item removal
-
-            }
-        }
+        goalDao.removeCompletedFromDao();
         notifyDataSetChanged(); // Notify adapter about the changes
-    }
-
-    public void updateGoals(List<GoalEntity> newGoals) {
-        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
-        this.goalsList = newGoals;
-        notifyDataSetChanged();
     }
 
     public void setGoalsList(List<GoalEntity> goalsList) {

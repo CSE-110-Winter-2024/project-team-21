@@ -9,17 +9,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import androidx.room.Room;
-import java.util.Collections;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -33,7 +30,7 @@ import android.widget.Toast;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+
 import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
@@ -49,9 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
-    private List<GoalEntity> goalsList;
-    private GoalsViewModel goalsViewModel;
-
+    private List<GoalEntity> goalsList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,12 +57,10 @@ public class MainActivity extends AppCompatActivity {
                 AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
         goalDao = db.goalDao();
 
-        goalsViewModel = new ViewModelProvider(this).get(GoalsViewModel.class);
-
         dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-        adapter = new GoalsAdapter(goalsList,goalsViewModel, goalDao);
+        adapter = new GoalsAdapter(goalsList, goalDao);
         forwardButton = findViewById(R.id.forwardButton); // Find the forward button
 
 
@@ -77,31 +70,8 @@ public class MainActivity extends AppCompatActivity {
         goalDao.getAllGoals().observe(this, goalEntities -> {
             adapter.updateGoals(goalEntities);
             updateNoGoalsVisibility();
-            updateDate();
         });
-
-        ////////////////////////////
-
-        /*// Initialize the GoalsViewModel
-        goalsViewModel = new ViewModelProvider(this).get(GoalsViewModel.class);
-
-        // Find views
-        dateTextView = findViewById(R.id.DateText);
-        recyclerView = findViewById(R.id.goals_recycler_view);
-        noGoalsTextView = findViewById(R.id.no_goals_text);
-        Button forwardButton = findViewById(R.id.forwardButton); // Find the forward button
-
-        // Initialize the list of goals
-        goalsList = new ArrayList<>();
-
-        // Initialize the adapter with the list of goals and the GoalsViewModel
-        adapter = new GoalsAdapter(goalsList, goalsViewModel);
-
         updateDate();
-
-        // Set the layout manager and adapter on the RecyclerView
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);*/
 
         // Set OnClickListener for FloatingActionButton to add new goals
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
@@ -115,21 +85,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 advanceTimeByOneDay();
+                if (goalDao.getGoals() == null) {
+                    updateNoGoalsVisibility();
+                }
             }
         });
 
 
     }
 
-
-    /*
-    LOOOOOK AT THIS
-
-
-
-
-
-     */
     private void advanceTimeByOneDay() {
         // Define the date format
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
@@ -186,51 +150,21 @@ public class MainActivity extends AppCompatActivity {
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
-
-
-
-        ////////////////////////////
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Goal");
-
-        final EditText input = new EditText(this);
-
-        // Assign the ID to the EditText
-        input.setId(R.id.edit_text_goal_id);
-
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String goal = input.getText().toString().trim();
-                if (!TextUtils.isEmpty(goal)) {
-                    goalsList.add(goal);
-                    adapter.notifyDataSetChanged();
-                    updateNoGoalsVisibility();
-                } else {
-                    Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
     }
 
     private void updateNoGoalsVisibility() {
-        if (goalDao.isItEmpty() == null) {
+        if (goalDao.getGoals() == null) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume(); // Always call the superclass method first
+
+
     }
 
     private void updateDate() {
@@ -242,18 +176,5 @@ public class MainActivity extends AppCompatActivity {
         // Update the TextView with the current date
         dateTextView.setText(currentDate);
     }
-
-    private final BroadcastReceiver dateChangedReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (Intent.ACTION_DATE_CHANGED.equals(intent.getAction())) {
-                // Date has changed, update the UI
-                updateDate();
-                adapter.removeCheckedOffGoals();
-            }
-        }
-    };
-
-
 
 }

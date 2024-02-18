@@ -24,10 +24,6 @@ public class GoalEntity {
         return isChecked;
     }
 
-    public Integer getSortNumber() {
-        return sortNumber;
-    }
-
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     private Integer id = null;
@@ -50,17 +46,9 @@ public class GoalEntity {
         isChecked = checked;
     }
 
-    public void setSortNumber(Integer sortNumber) {
-        this.sortNumber = sortNumber;
-    }
-
-    @ColumnInfo(name = "Sort Number")
-    private Integer sortNumber;
-
     public GoalEntity(String goalText, boolean isChecked) {
         this.goalText = goalText;
         this.isChecked = isChecked;
-        this.sortNumber = 0;
     }
 
     @Override
@@ -69,5 +57,10 @@ public class GoalEntity {
         if (o == null || getClass() != o.getClass()) return false;
         GoalEntity goal = (GoalEntity) o;
         return Objects.equals(goalText, goal.goalText) && Objects.equals(isChecked, goal.isChecked);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(goalText, isChecked);
     }
 }
