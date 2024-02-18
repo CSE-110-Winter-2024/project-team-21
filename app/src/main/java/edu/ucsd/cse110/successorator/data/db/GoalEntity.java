@@ -58,7 +58,6 @@ public class GoalEntity {
         GoalEntity goal = (GoalEntity) o;
         return Objects.equals(goalText, goal.goalText) && Objects.equals(isChecked, goal.isChecked);
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(goalText, isChecked);

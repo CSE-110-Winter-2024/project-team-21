@@ -1,5 +1,4 @@
 package edu.ucsd.cse110.successorator;
-
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,14 @@ import java.util.Collections;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
+
+import edu.ucsd.cse110.successorator.data.db.GoalDao;
+import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
@@ -23,27 +29,27 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     private GoalDao goalDao;
 
     // Constructor to initialize the adapter with a list of goals
+    GoalDao goalDao;
+
+
+
     public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
         this.goalsList = goalsList;
         this.goalDao = goalDao;
     }
 
     public void updateGoals(List<GoalEntity> newGoals) {
-        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
+        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
         this.goalsList = newGoals;
         notifyDataSetChanged();
     }
 
-    // Create new views (invoked by the layout manager)
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Create a new view by inflating the layout for a single item
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_goal, parent, false);
-        return new ViewHolder(view); // Remove the second argument
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_goal, parent, false);
+        return new ViewHolder(view);
     }
 
-    // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         String goalText = goalsList.get(position).getGoalText();
@@ -68,7 +74,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         });
     }
 
-    // Return the size of your dataset (invoked by the layout manager)
+
     @Override
     public int getItemCount() {
         return goalsList.size();

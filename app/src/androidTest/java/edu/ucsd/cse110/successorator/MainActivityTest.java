@@ -216,7 +216,6 @@ public class MainActivityTest {
         //Check that it is not crossed out after unchecking it
         onView(withText(goalText)).check(matches(withStrikeThroughText(goalText, false)));
     }
-
     //Test whether the app updates the day correctly
     @Test
     public void test5_dateCorrectlyUpdates() {
