@@ -37,4 +37,5 @@ public interface GoalDao {
 
     @Query("SELECT COUNT(*) FROM goals")
     int size();
+
 }

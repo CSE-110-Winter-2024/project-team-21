@@ -75,7 +75,7 @@ public class DatabaseTest {
         goalDao.update(updatedGoal);
 
         // Dao updates properly so isChecked is true.
-        assertTrue("Simulated checkmark should return true. ", updatedGoal.isChecked());
+        assertTrue("Simulated checkmark should return true. ", updatedGoal.isChecked);
 
         //assertTrue("Same goal should be true.", goalDao.findByGoalText(goalText).equals(testGoal));
         //goalDao should be NonNull because there is one item.

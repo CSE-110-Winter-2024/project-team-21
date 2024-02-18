@@ -1,16 +1,18 @@
 package edu.ucsd.cse110.successorator;
 
 import android.os.Bundle;
-
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import androidx.room.Room;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import java.text.ParseException;
@@ -19,6 +21,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import androidx.lifecycle.ViewModelProvider;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -26,6 +30,9 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
+import edu.ucsd.cse110.successorator.data.db.AppDatabase;
+import edu.ucsd.cse110.successorator.data.db.GoalDao;
+import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -41,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
 
     Button forwardButton;
 
-    //////////
     private TextView dateTextView;
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
@@ -62,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
         noGoalsTextView = findViewById(R.id.no_goals_text);
         adapter = new GoalsAdapter(goalsList, goalDao);
         forwardButton = findViewById(R.id.forwardButton); // Find the forward button
-
-
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
