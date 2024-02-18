@@ -138,13 +138,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 final String goalText = input.getText().toString().trim();
-                if (!TextUtils.isEmpty(goalText)) {
+                GoalEntity findSameGoal = goalDao.findByGoalText(goalText);
+                if (!TextUtils.isEmpty(goalText) && findSameGoal == null) {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
                             goalDao.insert(new GoalEntity(goalText, false));
                         }
                     }).start();
+                } else if (findSameGoal != null) {
+                    Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
                 }
@@ -172,5 +175,4 @@ public class MainActivity extends AppCompatActivity {
         // Update the TextView with the current date
         dateTextView.setText(currentDate);
     }
-
 }
