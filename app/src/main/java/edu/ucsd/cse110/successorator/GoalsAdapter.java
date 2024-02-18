@@ -49,15 +49,21 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     public void onBindViewHolder(ViewHolder holder, int position) {
         String goalText = goalsList.get(position).getGoalText();
         GoalEntity goalEntity = goalDao.findByGoalText(goalText);
-        boolean isChecked = goalEntity.isChecked();
 
-        holder.goalTextView.setText(goalText);
-        holder.goalCheckBox.setChecked(isChecked);
+        //fixed issue if goalEntity would not be found aka null
+        if (goalEntity == null) {
 
-        if (isChecked) {
-            holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-        } else {
-            holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+        }
+        else {
+            boolean isChecked = goalEntity.isChecked();
+            holder.goalTextView.setText(goalText);
+            holder.goalCheckBox.setChecked(isChecked);
+
+            if (isChecked) {
+                holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            } else {
+                holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            }
         }
 
         holder.goalCheckBox.setOnClickListener(v -> {
