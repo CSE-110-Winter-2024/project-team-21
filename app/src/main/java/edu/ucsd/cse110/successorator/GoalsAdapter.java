@@ -44,6 +44,31 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        String goalText = goalsList.get(position).getGoalText();
+        GoalEntity goalEntity = goalDao.findByGoalText(goalText);
+        boolean isChecked = goalEntity.isChecked();
+
+        holder.goalTextView.setText(goalText);
+        holder.goalCheckBox.setChecked(isChecked);
+
+        if (isChecked) {
+            holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+        }
+
+        holder.goalCheckBox.setOnClickListener(v -> {
+            boolean checked = holder.goalCheckBox.isChecked();
+            goalEntity.setChecked(checked);
+
+            goalDao.update(goalEntity);
+            notifyDataSetChanged();
+        });
+
+
+
+
+        //////////////////
         // Get the goal at the specified position in the list
         String goal = goalsList.get(position).getGoalText();
 
@@ -114,7 +139,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     }
 
     public void updateGoals(List<GoalEntity> newGoals) {
-        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
+        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
         this.goalsList = newGoals;
         notifyDataSetChanged();
     }

@@ -8,6 +8,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import androidx.room.Room;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,14 +34,22 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-
+import edu.ucsd.cse110.successorator.data.db.AppDatabase;
+import edu.ucsd.cse110.successorator.data.db.GoalDao;
+import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 public class MainActivity extends AppCompatActivity {
+    private AppDatabase db;
+    private GoalDao goalDao;
+
+    Button forwardButton;
+
+    //////////
     private TextView dateTextView;
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
-    private List<String> goalsList;
+    private List<GoalEntity> goalsList;
     private GoalsViewModel goalsViewModel;
 
 
@@ -45,7 +58,31 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize the GoalsViewModel
+        db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
+        goalDao = db.goalDao();
+
+        goalsViewModel = new ViewModelProvider(this).get(GoalsViewModel.class);
+
+        dateTextView = findViewById(R.id.DateText);
+        recyclerView = findViewById(R.id.goals_recycler_view);
+        noGoalsTextView = findViewById(R.id.no_goals_text);
+        adapter = new GoalsAdapter(goalsList,goalsViewModel, goalDao);
+        forwardButton = findViewById(R.id.forwardButton); // Find the forward button
+
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+
+        goalDao.getAllGoals().observe(this, goalEntities -> {
+            adapter.updateGoals(goalEntities);
+            updateNoGoalsVisibility();
+            updateDate();
+        });
+
+        ////////////////////////////
+
+        /*// Initialize the GoalsViewModel
         goalsViewModel = new ViewModelProvider(this).get(GoalsViewModel.class);
 
         // Find views
@@ -64,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the layout manager and adapter on the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(adapter);*/
 
         // Set OnClickListener for FloatingActionButton to add new goals
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
@@ -84,6 +121,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    /*
+    LOOOOOK AT THIS
+
+
+
+
+
+     */
     private void advanceTimeByOneDay() {
         // Define the date format
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
@@ -112,6 +158,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddGoalDialog() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Goal");
+
+        final EditText input = new EditText(this);
+        input.setId(R.id.edit_text_goal_id);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                final String goalText = input.getText().toString().trim();
+                if (!TextUtils.isEmpty(goalText)) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            goalDao.insert(new GoalEntity(goalText, false));
+                        }
+                    }).start();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+
+
+
+        ////////////////////////////
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
 
@@ -148,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateNoGoalsVisibility() {
-        if (goalsList.isEmpty()) {
+        if (goalDao.isItEmpty() == null) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
