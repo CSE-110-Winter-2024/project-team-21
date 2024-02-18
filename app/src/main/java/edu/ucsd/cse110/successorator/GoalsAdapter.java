@@ -28,18 +28,13 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     private List<GoalEntity> goalsList;
     private GoalDao goalDao;
 
-    // Constructor to initialize the adapter with a list of goals
-    GoalDao goalDao;
-
-
-
     public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
         this.goalsList = goalsList;
         this.goalDao = goalDao;
     }
 
     public void updateGoals(List<GoalEntity> newGoals) {
-        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked, o2.isChecked));
+        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
         this.goalsList = newGoals;
         notifyDataSetChanged();
     }
