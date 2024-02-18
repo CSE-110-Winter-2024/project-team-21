@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
             adapter.updateGoals(goalEntities);
             updateNoGoalsVisibility();
         });
+
         updateDate();
 
         // Set OnClickListener for FloatingActionButton to add new goals
@@ -85,9 +86,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 advanceTimeByOneDay();
-                if (goalDao.getGoals() == null) {
-                    updateNoGoalsVisibility();
-                }
+                updateNoGoalsVisibility();
             }
         });
 
@@ -153,18 +152,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateNoGoalsVisibility() {
-        if (goalDao.getGoals() == null) {
+        if (goalDao.isItEmpty() == null) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume(); // Always call the superclass method first
-
-
     }
 
     private void updateDate() {

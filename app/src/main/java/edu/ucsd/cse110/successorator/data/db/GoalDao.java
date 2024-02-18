@@ -26,6 +26,9 @@ public interface GoalDao {
     @Query("SELECT * FROM goals WHERE goalText = :goalText LIMIT 1")
     GoalEntity findByGoalText(String goalText);
 
+    @Query("SELECT * FROM goals LIMIT 1")
+    GoalEntity isItEmpty();
+
     @Query("DELETE FROM goals WHERE isChecked = 1")
     void removeCompletedFromDao();
 
