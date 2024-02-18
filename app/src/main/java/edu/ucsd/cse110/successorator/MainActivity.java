@@ -9,9 +9,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import androidx.lifecycle.ViewModelProvider;
@@ -83,14 +85,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void advanceTimeByOneDay() {
-        // Get the current date
+        // Define the date format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
+
+        // Initialize a calendar instance
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_MONTH, 1); // Advance the date by one day
+
+        // Try to parse the date from the TextView, if it exists
+        try {
+            Date displayedDate = dateFormat.parse(dateTextView.getText().toString());
+            calendar.setTime(displayedDate);
+        } catch (ParseException e) {
+            // If parsing fails, the current date is used
+            e.printStackTrace();
+        }
+
+        // Advance the date by one day
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
 
         // Update the TextView with the new date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
         String currentDate = dateFormat.format(calendar.getTime());
         dateTextView.setText(currentDate);
+
+        // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
     }
 
