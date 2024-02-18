@@ -67,15 +67,15 @@ public class DatabaseTest {
 
         //NEED to assign an entity in the Dao to a variable because of PrimaryKey
         GoalEntity updatedGoal = goalDao.findByGoalText(goalText);
-        assertFalse("goalIsChecked should be false in database to begin with.", updatedGoal.isChecked);
+        assertFalse("goalIsChecked should be false in database to begin with.", updatedGoal.isChecked());
 
         // Essentially, simulating the button is "checkmarked" so it should be true for isChecked
-        updatedGoal.isChecked = true;
+        updatedGoal.setChecked(true);
 
         goalDao.update(updatedGoal);
 
         // Dao updates properly so isChecked is true.
-        assertTrue("Simulated checkmark should return true. ", updatedGoal.isChecked);
+        assertTrue("Simulated checkmark should return true. ", updatedGoal.isChecked());
 
         //assertTrue("Same goal should be true.", goalDao.findByGoalText(goalText).equals(testGoal));
         //goalDao should be NonNull because there is one item.

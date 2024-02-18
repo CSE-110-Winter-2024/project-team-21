@@ -29,9 +29,13 @@ public interface GoalDao {
     @Query("SELECT * FROM goals LIMIT 1")
     GoalEntity isItEmpty();
 
+    @Query("DELETE FROM goals WHERE isChecked = 1")
+    void removeCompletedFromDao();
+
     @Query("SELECT * FROM goals")
-    List<GoalEntity> getGoals();
+    LiveData<GoalEntity> getGoals();
 
     @Query("SELECT COUNT(*) FROM goals")
     int size();
+
 }

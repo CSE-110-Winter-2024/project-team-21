@@ -12,23 +12,43 @@ import edu.ucsd.cse110.successorator.*;
 
 @Entity(tableName = "goals")
 public class GoalEntity {
+    public Integer getId() {
+        return id;
+    }
+
+    public String getGoalText() {
+        return goalText;
+    }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    public Integer id = null;
+    private Integer id = null;
 
     @ColumnInfo(name = "goalText")
-    public String goalText;
+    private String goalText;
 
     @ColumnInfo(name = "isChecked")
-    public boolean isChecked;
+    private boolean isChecked;
 
-    @ColumnInfo(name = "Sort Number")
-    public Integer sortNumber;
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public void setGoalText(String goalText) {
+        this.goalText = goalText;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
 
     public GoalEntity(String goalText, boolean isChecked) {
         this.goalText = goalText;
         this.isChecked = isChecked;
-        this.sortNumber = 0;
     }
 
     @Override
@@ -37,5 +57,9 @@ public class GoalEntity {
         if (o == null || getClass() != o.getClass()) return false;
         GoalEntity goal = (GoalEntity) o;
         return Objects.equals(goalText, goal.goalText) && Objects.equals(isChecked, goal.isChecked);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(goalText, isChecked);
     }
 }
