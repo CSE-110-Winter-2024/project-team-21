@@ -3,6 +3,7 @@ package edu.ucsd.cse110.successorator;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
@@ -37,6 +38,7 @@ import static junit.framework.TestCase.assertEquals;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -49,6 +51,10 @@ import androidx.test.core.app.ActivityScenario;
 
 import org.junit.Assert;
 import org.junit.runners.MethodSorters;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
@@ -209,5 +215,101 @@ public class MainActivityTest {
 
         //Check that it is not crossed out after unchecking it
         onView(withText(goalText)).check(matches(withStrikeThroughText(goalText, false)));
+    }
+
+    //Test whether the app updates the day correctly
+    @Test
+    public void test5_dateCorrectlyUpdates() {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
+        String currentDate = dateFormat.format(calendar.getTime());
+        onView(withId(R.id.forwardButton)).perform(click());
+        // Advance the date by one day
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+
+        // Update the TextView with the new date
+        String newDate = dateFormat.format(calendar.getTime());
+
+        onView(withId(R.id.DateText)).check(matches(withText(newDate)));
+    }
+
+    //Test whether deleted goals are deleted on nextDay
+    @Test
+    public void test6_goalsCorrectlyDeleteAfterNextDay() throws InterruptedException {
+        final String goalText = "Test Goal Delete";
+        final String goalText2 = "Test Goal Delete2";
+
+        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+
+        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+
+        Thread.sleep(1000);
+        //Click the checkbox of goal
+        onView(withId(R.id.goals_recycler_view)).perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), clickChildViewWithId(R.id.goal_checkbox)));
+        onView(withId(R.id.forwardButton)).perform(click());
+
+        //Check if goalText is deleted
+        onView(withText(goalText)).check(doesNotExist());
+        onView(withText(goalText2)).check(matches(withText(goalText2)));
+        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+
+        //Click the checkbox of goal
+        onView(withId(R.id.goals_recycler_view)).perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), clickChildViewWithId(R.id.goal_checkbox)));
+
+        //Click the checkbox of goal
+        onView(withId(R.id.goals_recycler_view)).perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText2)), clickChildViewWithId(R.id.goal_checkbox)));
+        Thread.sleep(1000);
+
+        onView(withId(R.id.forwardButton)).perform(click());
+
+        onView(withText(goalText)).check(doesNotExist());
+        onView(withText(goalText2)).check(doesNotExist());
+    }
+
+    //Check if goals not checked stay in RecyclerView
+    @Test
+    public void test7_goalsUncheckedStayAfterDay() throws InterruptedException {
+        final String goalText = "Test Goal Stay";
+        final String goalText2 = "Test Goal Stay2";
+
+        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+
+        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+
+        Thread.sleep(1000);
+        //Click the checkbox of goal
+        onView(withId(R.id.forwardButton)).perform(click());
+
+        //Check if both goalTexts stay
+        onView(withText(goalText)).check(matches(withText(goalText)));
+        onView(withText(goalText2)).check(matches(withText(goalText2)));
+
+
+        Thread.sleep(1000);
+
+        onView(withId(R.id.forwardButton)).perform(click());
+        onView(withId(R.id.forwardButton)).perform(click());
+        onView(withId(R.id.forwardButton)).perform(click());
+        onView(withId(R.id.forwardButton)).perform(click());
+
+
+        //Check if both goalTexts stay
+        onView(withText(goalText)).check(matches(withText(goalText)));
+        onView(withText(goalText2)).check(matches(withText(goalText2)));
     }
 }
