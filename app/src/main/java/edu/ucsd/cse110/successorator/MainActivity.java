@@ -9,148 +9,133 @@ import androidx.room.Room;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import androidx.room.Room;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import androidx.lifecycle.ViewModelProvider;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.List;
+import java.util.ArrayList;
 import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
-import edu.ucsd.cse110.successorator.data.db.AppDatabase;
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 public class MainActivity extends AppCompatActivity {
     private AppDatabase db;
     private GoalDao goalDao;
 
+    // UI references
     Button forwardButton;
-
     private TextView dateTextView;
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
     private List<GoalEntity> goalsList = new ArrayList<>();
+    private Spinner contextSpinner; // Spinner for selecting context
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Database and DAO initialization
         db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
         goalDao = db.goalDao();
 
+        // UI initialization
         dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
         adapter = new GoalsAdapter(goalsList, goalDao);
-        forwardButton = findViewById(R.id.forwardButton); // Find the forward button
+        forwardButton = findViewById(R.id.forwardButton);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
+        // Observer for goal entities
         goalDao.getAllGoals().observe(this, goalEntities -> {
             adapter.updateGoals(goalEntities);
             updateNoGoalsVisibility();
         });
 
+        // Setting the date in the UI
         updateDate();
 
-        // Set OnClickListener for FloatingActionButton to add new goals
-        findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddGoalDialog();
-            }
+        // Add goal button listener
+        findViewById(R.id.add_goal_button).setOnClickListener(v -> showAddGoalDialog());
+
+        // Forward button listener to advance the day
+        forwardButton.setOnClickListener(v -> {
+            advanceTimeByOneDay();
+            updateNoGoalsVisibility();
         });
-
-        forwardButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                advanceTimeByOneDay();
-                updateNoGoalsVisibility();
-            }
-        });
-
-
     }
 
+    // Advances the time by one day and updates the UI
     private void advanceTimeByOneDay() {
-        // Define the date format
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
-
-        // Initialize a calendar instance
         Calendar calendar = Calendar.getInstance();
-
-        // Try to parse the date from the TextView, if it exists
         try {
             Date displayedDate = dateFormat.parse(dateTextView.getText().toString());
             calendar.setTime(displayedDate);
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            String currentDate = dateFormat.format(calendar.getTime());
+            dateTextView.setText(currentDate);
+            adapter.removeCheckedOffGoals(); // Remove completed goals
         } catch (ParseException e) {
-            // If parsing fails, the current date is used
             e.printStackTrace();
         }
-
-        // Advance the date by one day
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-
-        // Update the TextView with the new date
-        String currentDate = dateFormat.format(calendar.getTime());
-        dateTextView.setText(currentDate);
-
-        // Your method to remove checked-off goals
-        adapter.removeCheckedOffGoals();
     }
 
+    // Displays a dialog for adding a new goal with context tagging
     private void showAddGoalDialog() {
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
 
+        // EditText for goal input
         final EditText input = new EditText(this);
         input.setId(R.id.edit_text_goal_id);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
 
-        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                final String goalText = input.getText().toString().trim();
-                GoalEntity findSameGoal = goalDao.findByGoalText(goalText);
-                if (!TextUtils.isEmpty(goalText) && findSameGoal == null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            goalDao.insert(new GoalEntity(goalText, false));
-                        }
-                    }).start();
-                } else if (findSameGoal != null) {
-                    Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
-                }
+        // Spinner for context selection
+        contextSpinner = new Spinner(this);
+        ArrayAdapter<String> contextAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, getContexts());
+        contextSpinner.setAdapter(contextAdapter);
+
+        // Layout to contain input and spinner
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.addView(input); // Add input
+        layout.addView(contextSpinner); // Add spinner
+        builder.setView(layout);
+
+        // Positive button for adding the goal
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            final String goalText = input.getText().toString().trim();
+            final String selectedContext = contextSpinner.getSelectedItem().toString();
+            GoalEntity findSameGoal = goalDao.findByGoalText(goalText);
+            if (!TextUtils.isEmpty(goalText) && findSameGoal == null) {
+                // Insert new goal with context into the database
+                new Thread(() -> {
+                    GoalEntity goalEntity = new GoalEntity(goalText, false);
+                    goalEntity.setContext(selectedContext); // Set the context
+                    goalDao.insert(goalEntity);
+                }).start();
+            } else if (findSameGoal != null) {
+                Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -158,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+    // Updates visibility of 'no goals' text based on goal presence
     private void updateNoGoalsVisibility() {
         if (goalDao.isItEmpty() == null) {
             noGoalsTextView.setVisibility(View.VISIBLE);
@@ -166,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Updates the date displayed at the top of the app
     private void updateDate() {
         // Get the current date
         Calendar calendar = Calendar.getInstance();
@@ -175,4 +162,11 @@ public class MainActivity extends AppCompatActivity {
         // Update the TextView with the current date
         dateTextView.setText(currentDate);
     }
+
+    // Helper method to provide context options for the spinner
+    private List<String> getContexts() {
+        // Define the list of contexts to choose from
+        return Arrays.asList("Home", "Work", "School", "Errands");
+    }
 }
+
