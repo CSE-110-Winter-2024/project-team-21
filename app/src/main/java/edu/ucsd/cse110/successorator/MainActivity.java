@@ -29,6 +29,12 @@ import java.util.ArrayList;
 import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
+import android.util.Log;
+
+
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -43,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
     private GoalsAdapter adapter;
     private List<GoalEntity> goalsList = new ArrayList<>();
     private Spinner contextSpinner; // Spinner for selecting context
+
+    // Fields to manage focus mode
+    private boolean inFocusMode = false;
+    private String focusContext = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
             advanceTimeByOneDay();
             updateNoGoalsVisibility();
         });
+
+
     }
 
     // Advances the time by one day and updates the UI
@@ -97,6 +109,44 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    // method for when the focus mode button is clicked
+    public void toggleFocusMode(View view) {
+        final String[] contexts = getContexts().toArray(new String[0]);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Focus Context")
+                .setItems(contexts, (dialog, which) -> {
+                    // Apply the focus mode with the selected context
+                    focusContext = contexts[which];
+                    inFocusMode = true;
+                    // Use the LiveData observer pattern
+                    goalDao.getAllGoals().observe(this, this::filterGoalsByContext);
+                })
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Clear Focus", (dialog, which) -> clearFocusMode());
+        builder.create().show();
+    }
+
+    private void filterGoalsByContext(List<GoalEntity> goals) {
+        if (inFocusMode && focusContext != null) {
+            // If not null, proceed with filtering
+            List<GoalEntity> filteredGoals = goals.stream()
+                    .filter(goal -> goal.getContext().equals(focusContext))
+                    .collect(Collectors.toList());
+            adapter.setGoalsList(filteredGoals);
+        } else {
+            // If not in focus mode or focus context is null, show all goals
+            adapter.setGoalsList(goals);
+        }
+    }
+
+    private void clearFocusMode() {
+        inFocusMode = false;
+        focusContext = null;
+        // Reset to observe all goals without filtering
+        goalDao.getAllGoals().observe(this, adapter::setGoalsList);
+    }
+
 
     // Displays a dialog for adding a new goal with context tagging
     private void showAddGoalDialog() {

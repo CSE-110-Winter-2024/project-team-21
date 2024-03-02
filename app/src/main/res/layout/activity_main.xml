@@ -19,6 +19,17 @@
         android:drawableRight="@drawable/ic_forward"
         app:iconTint="@color/white" />
 
+    <Button
+        android:id="@+id/btn_focus_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/DateText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="Focus Mode"
+        android:onClick="toggleFocusMode" />
+
+
     <TextView
         android:id="@+id/DateText"
         android:layout_width="310dp"
