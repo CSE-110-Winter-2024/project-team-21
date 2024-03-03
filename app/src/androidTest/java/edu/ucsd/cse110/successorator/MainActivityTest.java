@@ -1,5 +1,7 @@
 package edu.ucsd.cse110.successorator;
 
+import static androidx.test.espresso.Espresso.closeSoftKeyboard;
+import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.typeText;
@@ -9,8 +11,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
+import static androidx.test.espresso.matcher.ViewMatchers.withChild;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.instanceOf;
 
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
@@ -18,6 +24,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.*;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.contrib.RecyclerViewActions;
+import androidx.test.espresso.matcher.RootMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
@@ -37,13 +44,18 @@ import static androidx.test.core.app.ActivityScenario.launch;
 import static junit.framework.TestCase.assertEquals;
 
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+
+import static java.util.EnumSet.allOf;
 
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Paint;
 import android.view.View;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.lifecycle.Lifecycle;
@@ -319,4 +331,72 @@ public class MainActivityTest {
         onView(withText(goalText)).check(matches(withText(goalText)));
         onView(withText(goalText2)).check(matches(withText(goalText2)));
     }
+
+    @Test
+    public void test8_US4_AddGoalWithSpecificContext() {
+        final String goalText = "Draft research paper";
+        final String contextTag = "School";
+
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText));
+
+        onView(withText("Home")).perform(click());
+
+        onView(withText(contextTag))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText(goalText))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText(contextTag)))));
+    }
+
+    @Test
+    public void test9_US4_AddGoalNoSpecificContext() {
+        final String goalText = "Draft research paper";
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText));
+        onView(withText("Add")).perform(click());
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText(goalText))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Home")))));
+    }
+    @Test
+    public void test10_US4_AddTwoGoalsWithSpecificContext() {
+        //add goal 1
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Draft Research"));
+
+        onView(withText("Home")).perform(click());
+
+        onView(withText("School"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //add goal 2
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Email Boss"));
+
+        onView(withText("Home")).perform(click());
+
+        onView(withText("Work"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Draft Research"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("School")))));
+
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Email Boss"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Work")))));
+    }
+
+
 }
