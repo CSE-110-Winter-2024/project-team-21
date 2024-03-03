@@ -62,9 +62,9 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/goals_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="601dp"
+        android:layout_height="549dp"
         android:layout_below="@id/add_goal_button"
-        android:layout_marginTop="-667dp"
+        android:layout_marginTop="-614dp"
         android:layout_marginBottom="16dp"
         android:visibility="visible" /> <!-- Initially visible -->
 </RelativeLayout>

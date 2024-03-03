@@ -9,6 +9,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
+import static androidx.test.espresso.matcher.ViewMatchers.withChild;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
@@ -18,6 +19,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.*;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.contrib.RecyclerViewActions;
+import androidx.test.espresso.matcher.RootMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
@@ -37,6 +39,7 @@ import static androidx.test.core.app.ActivityScenario.launch;
 import static junit.framework.TestCase.assertEquals;
 
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
@@ -319,4 +322,175 @@ public class MainActivityTest {
         onView(withText(goalText)).check(matches(withText(goalText)));
         onView(withText(goalText2)).check(matches(withText(goalText2)));
     }
+
+    //Helper method for US5 to add Goals
+    public void addGoals(){
+        //Add "School" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Write Paper"), ViewActions.closeSoftKeyboard());
+        onView(withText("Home")).perform(click());
+        onView(withText("School"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //Add "Work" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Email Boss"), ViewActions.closeSoftKeyboard());
+        onView(withText("Home")).perform(click());
+        onView(withText("Work"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //Add "Errands" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Clean"), ViewActions.closeSoftKeyboard());
+        onView(withText("Home")).perform(click());
+        onView(withText("Errands"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //Add "Home" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Read"), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+    }
+    @Test
+    public void US5_FiltersWork() {
+        addGoals();
+        //Focus Mode
+        onView(withId(R.id.btn_focus_mode)).perform(click());
+        onView(withText("Work")).perform(click());
+
+        //Work appears
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Email Boss"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Work")))));
+
+        //"Home" and "Errands" do not appear
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Write Paper"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("School"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Clean"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("Errands"))))));
+
+        onView(isRoot()).perform(waitFor(3000)); //we can see it for a bit
+    }
+
+    @Test
+    public void US5_FiltersChange() {
+        addGoals();
+        //Focus Mode for Work
+        onView(withId(R.id.btn_focus_mode)).perform(click());
+        onView(withText("Work")).perform(click());
+
+        //Work appears
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Email Boss"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Work")))));
+
+        //"Home" and "Errands" do not appear
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Write Paper"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("School"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Clean"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("Errands"))))));
+
+        onView(isRoot()).perform(waitFor(3000)); //we can see it for a bit
+
+        //Focus Mode for School
+        onView(withId(R.id.btn_focus_mode)).perform(click());
+        onView(withText("School")).perform(click());
+
+        //School appears
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Write Paper"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("School")))));
+
+        //"Home" and "Errands" do not appear
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Email Boss"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("Work"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Clean"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("Errands"))))));
+
+        onView(isRoot()).perform(waitFor(5000)); //we can see it for a bit
+
+    }
+    @Test
+    public void US5_ClearFocus() {
+        addGoals();
+        //Focus Mode for Work
+        onView(withId(R.id.btn_focus_mode)).perform(click());
+        onView(withText("Work")).perform(click());
+
+        //Work appears
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Email Boss"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Work")))));
+
+        //"Home" and "Errands" do not appear
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Write Paper"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("School"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(allOf(
+                        withId(R.id.goal_text_view),
+                        withText("Clean"))))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(not(hasDescendant(withChild(withText("Errands"))))));
+
+        //Clear Focus Mode
+        onView(withId(R.id.btn_focus_mode)).perform(click());
+        onView(withText("Clear Focus")).perform(click());
+
+        //Everything Appears
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Email Boss"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Work")))));
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Write Paper"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("School")))));
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Clean"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Errands")))));
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Read"))));
+        onView(withId(R.id.goals_recycler_view))
+                .check(matches(hasDescendant(withChild(withText("Home")))));
+    }
+
 }
