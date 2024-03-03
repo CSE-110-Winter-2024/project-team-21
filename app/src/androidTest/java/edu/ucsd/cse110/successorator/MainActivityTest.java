@@ -1,7 +1,5 @@
 package edu.ucsd.cse110.successorator;
 
-import static androidx.test.espresso.Espresso.closeSoftKeyboard;
-import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.typeText;
@@ -14,48 +12,29 @@ import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withChild;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.instanceOf;
 
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
+
 import androidx.test.espresso.*;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.espresso.matcher.RootMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static androidx.test.core.app.ActivityScenario.launch;
-
 import static junit.framework.TestCase.assertEquals;
 
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-
-import static java.util.EnumSet.allOf;
-
-import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Paint;
 import android.view.View;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.lifecycle.Lifecycle;
@@ -233,7 +212,6 @@ public class MainActivityTest {
     public void test5_dateCorrectlyUpdates() {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
-        String currentDate = dateFormat.format(calendar.getTime());
         onView(withId(R.id.forwardButton)).perform(click());
         // Advance the date by one day
         calendar.add(Calendar.DAY_OF_MONTH, 1);
