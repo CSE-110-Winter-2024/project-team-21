@@ -1,11 +1,14 @@
 package edu.ucsd.cse110.successorator;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
+
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -130,33 +133,61 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
 
-        // Inflate a custom layout with EditText and Spinner
-        View customView = getLayoutInflater().inflate(R.layout.dialog_add_goal, null);
-        final EditText input = customView.findViewById(R.id.edit_text_goal_id);
-        final Spinner frequencySpinner = customView.findViewById(R.id.frequency_spinner);
+        // Inflate the custom layout
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_goal, null);
 
-        // Set up the spinner with the frequency options
+        final EditText editTextGoal = dialogView.findViewById(R.id.edit_text_goal_id);
+        final Spinner frequencySpinner = dialogView.findViewById(R.id.frequency_spinner);
+        final Button selectStartDateButton = dialogView.findViewById(R.id.button_select_start_date);
+
+        // Setup the spinner with frequencies
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.goal_frequencies, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         frequencySpinner.setAdapter(adapter);
 
-        builder.setView(customView);
+        final Calendar calendar = Calendar.getInstance();
+        final SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.US);
+        // Initially set the button text to "Select Starting Date"
+        selectStartDateButton.setText("Select Starting Date");
 
-        // Set up the buttons
-        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                final String goalText = input.getText().toString().trim();
-                final String frequency = frequencySpinner.getSelectedItem().toString();
+        // DatePickerDialog logic
+        DatePickerDialog.OnDateSetListener date = (view, year, monthOfYear, dayOfMonth) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, monthOfYear);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            // Update the button text with the selected date
+            selectStartDateButton.setText(sdf.format(calendar.getTime()));
+        };
 
-                // Insert your logic to handle the new goal with its frequency here
+        selectStartDateButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, date,
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)).show());
+
+        builder.setView(dialogView);
+
+        // Handle the "Add" button
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            final String goalText = editTextGoal.getText().toString().trim();
+            final String frequency = frequencySpinner.getSelectedItem().toString();
+            final long startDate = calendar.getTimeInMillis(); // Get the start date in millis
+
+            GoalEntity findSameGoal = goalDao.findByGoalText(goalText);
+            if (!TextUtils.isEmpty(goalText) && findSameGoal == null) {
+                new Thread(() -> goalDao.insert(new GoalEntity(goalText, false))).start();
+            } else if (findSameGoal != null) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
+            } else {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show());
             }
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
+
+
 
 
     private void updateNoGoalsVisibility() {

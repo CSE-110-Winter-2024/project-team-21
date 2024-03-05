@@ -16,4 +16,13 @@
         android:id="@+id/frequency_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+
+
+    <Button
+        android:id="@+id/button_select_start_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Starting: Select Start Date" />
+
 </LinearLayout>
