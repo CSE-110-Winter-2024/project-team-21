@@ -7,7 +7,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 import androidx.room.Room;
 
@@ -125,38 +127,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddGoalDialog() {
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
 
-        final EditText input = new EditText(this);
-        input.setId(R.id.edit_text_goal_id);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
+        // Inflate a custom layout with EditText and Spinner
+        View customView = getLayoutInflater().inflate(R.layout.dialog_add_goal, null);
+        final EditText input = customView.findViewById(R.id.edit_text_goal_id);
+        final Spinner frequencySpinner = customView.findViewById(R.id.frequency_spinner);
 
+        // Set up the spinner with the frequency options
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.goal_frequencies, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        frequencySpinner.setAdapter(adapter);
+
+        builder.setView(customView);
+
+        // Set up the buttons
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 final String goalText = input.getText().toString().trim();
-                GoalEntity findSameGoal = goalDao.findByGoalText(goalText);
-                if (!TextUtils.isEmpty(goalText) && findSameGoal == null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            goalDao.insert(new GoalEntity(goalText, false));
-                        }
-                    }).start();
-                } else if (findSameGoal != null) {
-                    Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(MainActivity.this, "Please enter a goal", Toast.LENGTH_SHORT).show();
-                }
+                final String frequency = frequencySpinner.getSelectedItem().toString();
+
+                // Insert your logic to handle the new goal with its frequency here
             }
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
+
 
     private void updateNoGoalsVisibility() {
         if (goalDao.isItEmpty() == null) {
