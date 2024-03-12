@@ -95,6 +95,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     public void removeCheckedOffGoals() {
         goalDao.removeCompletedFromDao();
+        goalDao.uncheckRecurringGoals();
         notifyDataSetChanged(); // Notify adapter about the changes
     }
 

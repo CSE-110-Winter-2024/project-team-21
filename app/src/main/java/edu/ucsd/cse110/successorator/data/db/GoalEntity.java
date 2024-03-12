@@ -35,8 +35,8 @@ public class GoalEntity {
     @ColumnInfo(name = "freqOccur")
     private Integer freqOccur;
 
-    @ColumnInfo(name = "freqDay")
-    private Integer freqDay;
+    @ColumnInfo(name = "freqTimeInMilli")
+    private long freqTimeInMilli;
 
     public void setId(Integer id) { this.id = id; }
 
@@ -60,7 +60,7 @@ public class GoalEntity {
         this.freqDayString = freqDayString;
     }
     public void setFreqOccur(Integer freqOccur) { this.freqOccur = freqOccur; }
-    public void setFreqDay(Integer freqDay) { this.freqDay = freqDay; }
+    public void setFreqTimeInMilli(long freqTimeInMilli) { this.freqTimeInMilli = freqTimeInMilli; }
 
 
     public Integer getId() {
@@ -87,11 +87,11 @@ public class GoalEntity {
     public Integer getFreqOccur() {
         return freqOccur;
     }
-    public Integer getFreqDay() {
-        return freqDay;
+    public long getFreqTimeInMilli() {
+        return freqTimeInMilli;
     }
 
-    public GoalEntity(String goalText, boolean isChecked, String frequencyType, String freqDayString, Integer freqMonth, Integer freqDay, Integer freqOccur) {
+    public GoalEntity(String goalText, boolean isChecked, String frequencyType, String freqDayString, Integer freqMonth, long freqTimeInMilli, Integer freqOccur) {
         this.goalText = goalText;
         this.isChecked = isChecked;
         this.frequencyType = frequencyType;
