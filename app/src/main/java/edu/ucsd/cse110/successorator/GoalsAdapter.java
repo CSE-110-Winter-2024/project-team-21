@@ -1,9 +1,12 @@
 package edu.ucsd.cse110.successorator;
 import android.graphics.Paint;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -27,10 +30,14 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     private List<GoalEntity> goalsList;
     private GoalDao goalDao;
+    private PopupWindow popupMenu1;
 
-    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
+
+
+    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao, PopupWindow popupMenu1) {
         this.goalsList = goalsList;
         this.goalDao = goalDao;
+        this.popupMenu1 = popupMenu1;
     }
 
     public void updateGoals(List<GoalEntity> newGoals) {
@@ -85,11 +92,22 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView goalTextView;
         CheckBox goalCheckBox;
+        Button recurButton;
+
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             goalTextView = itemView.findViewById(R.id.goal_text_view);
             goalCheckBox = itemView.findViewById(R.id.goal_checkbox);
+            recurButton = itemView.findViewById(R.id.recurButton);
+
+            recurButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Handle the click event for recurButton here
+                    popupMenu1.showAtLocation(itemView, Gravity.CENTER, 0, 0);
+                }
+            });
         }
     }
 

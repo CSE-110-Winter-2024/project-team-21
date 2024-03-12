@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/goal_text_view"
-        android:layout_width="0dp"
+        android:layout_width="266dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:textSize="18sp" />
@@ -16,4 +16,12 @@
         android:id="@+id/goal_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/recurButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:text="+"
+        android:textSize="24sp"
+        android:gravity="center"/>
 </LinearLayout>

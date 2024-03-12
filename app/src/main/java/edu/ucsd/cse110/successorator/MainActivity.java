@@ -6,10 +6,17 @@ import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
+
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import androidx.room.Room;
+import android.content.Context;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,6 +61,12 @@ public class MainActivity extends AppCompatActivity {
     private GoalsAdapter adapter;
     private List<GoalEntity> goalsList = new ArrayList<>();
 
+
+    private PopupWindow popupMenu1;
+    private PopupWindow popupMenu2;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,17 +79,144 @@ public class MainActivity extends AppCompatActivity {
         dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-        adapter = new GoalsAdapter(goalsList, goalDao);
+        adapter = new GoalsAdapter(goalsList, goalDao, popupMenu1);
         forwardButton = findViewById(R.id.forwardButton); // Find the forward button
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView1 = inflater.inflate(R.layout.popup_menu_layout, null);
+        View popupView2 = inflater.inflate(R.layout.choose_day_popup, null);
+        popupMenu1 = new PopupWindow(popupView1, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        popupMenu2 = new PopupWindow(popupView2, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+
+
+        // Find buttons in popup menu 1
+        Button chooseDayButton = popupView1.findViewById(R.id.chooseDayButton);
+        Button everydayButton = popupView1.findViewById(R.id.everydayButton);
+        ImageButton closeButton1 = popupView1.findViewById(R.id.closeButton);
+        ImageButton closeButton2 = popupView2.findViewById(R.id.closeButton2);
+
+        Button sundayButton = popupView2.findViewById(R.id.sundayButton);
+        Button mondayButton = popupView2.findViewById(R.id.mondayButton);
+        Button tuesdayButton = popupView2.findViewById(R.id.tuesdayButton);
+        Button wednesdayButton = popupView2.findViewById(R.id.wednesdayButton);
+        Button thursdayButton = popupView2.findViewById(R.id.thursdayButton);
+        Button fridayButton = popupView2.findViewById(R.id.fridayButton);
+        Button saturdayButton = popupView2.findViewById(R.id.saturdayButton);
+
+
+
+
+
+        // Set click listeners for buttons in popup menu 1
+        chooseDayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupMenu1.dismiss(); // Close popup menu 1
+                popupMenu2.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0); // Show popup menu 2
+            }
+        });
+
+        everydayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Check if a goal is selected
+                popupMenu1.dismiss();
+            }
+        });
+
+        closeButton1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupMenu1.dismiss(); // Dismiss popup menu 1
+            }
+        });
+        // Find close button in popup menu 2
+
+        // Set click listener for close button in popup menu 2
+        closeButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupMenu2.dismiss(); // Dismiss popup menu 2
+            }
+        });
+
 
         goalDao.getAllGoals().observe(this, goalEntities -> {
             adapter.updateGoals(goalEntities);
             updateNoGoalsVisibility();
         });
-
         updateDate();
+
+        // Inflate item_goal.xml to find recurButton
+        View itemGoalView = inflater.inflate(R.layout.item_goal, null);
+
+        // Set click listeners for buttons in popup menu 2
+        sundayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Sunday" button
+                // Add your logic here
+            }
+        });
+
+        mondayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Monday" button
+                // Add your logic here
+            }
+        });
+
+        tuesdayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Tuesday" button
+                // Add your logic here
+            }
+        });
+
+        wednesdayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Wednesday" button
+                // Add your logic here
+            }
+        });
+
+        thursdayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Thursday" button
+                // Add your logic here
+            }
+        });
+
+        fridayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Friday" button
+                // Add your logic here
+            }
+        });
+
+        saturdayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle click on "Saturday" button
+                // Add your logic here
+            }
+        });
+
+        closeButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupMenu2.dismiss(); // Dismiss popup menu 2
+            }
+        });
+
+        // Show popup menu 1 when the plus button is clicked
+
 
         // Set OnClickListener for FloatingActionButton to add new goals
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {

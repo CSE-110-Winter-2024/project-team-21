@@ -24,12 +24,16 @@ public class GoalEntity {
         return isChecked;
     }
 
+
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     private Integer id = null;
 
     @ColumnInfo(name = "goalText")
     private String goalText;
+
+    private boolean isRecurring;
+
 
     @ColumnInfo(name = "isChecked")
     private boolean isChecked;
@@ -61,5 +65,13 @@ public class GoalEntity {
     @Override
     public int hashCode() {
         return Objects.hash(goalText, isChecked);
+    }
+
+    public boolean isRecurring() {
+        return isRecurring;
+    }
+
+    public void setRecurring(boolean recurring) {
+        isRecurring = recurring;
     }
 }
