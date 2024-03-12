@@ -29,7 +29,7 @@ public interface GoalDao {
     @Query("SELECT * FROM goals LIMIT 1")
     GoalEntity isItEmpty();
 
-    @Query("DELETE FROM goals WHERE isChecked = 1")
+    @Query("DELETE FROM goals WHERE isChecked = 1 AND frequencyType = 'One-time' ")
     void removeCompletedFromDao();
 
     @Query("SELECT * FROM goals")
