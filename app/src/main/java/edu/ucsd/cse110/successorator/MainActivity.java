@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import androidx.room.Room;
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private int shownGoalsCount;
     Calendar today = Calendar.getInstance();
 
+    String allFormattedToday;
+
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
     @Override
@@ -85,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         shownGoalsCount = 0;
         today.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH), 0, 0, 0); // Set the calendar to 12:00 AM on the current day with hour, minute, second
+        allFormattedToday = dateFormat.format(today.getTime());
 
         goalDao.getAllGoals().observe(this, goalEntities -> {
             List<GoalEntity> filteredGoals = goalEntities.stream()
@@ -158,43 +162,109 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the custom layout
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_add_goal, null);
+        builder.setView(dialogView);
 
         final EditText editTextGoal = dialogView.findViewById(R.id.edit_text_goal_id);
-        final Spinner frequencySpinner = dialogView.findViewById(R.id.frequency_spinner);
-        final Button selectStartDateButton = dialogView.findViewById(R.id.button_select_start_date);
+        final Spinner spinDay = dialogView.findViewById(R.id.spin_day);
+        final Spinner spinFreq = dialogView.findViewById(R.id.spin_recurring);
+        final Spinner spinWeek = dialogView.findViewById(R.id.spin_weekly);
+        final Button yearlyButton = dialogView.findViewById(R.id.button_select_start_date);
+        final Button oneTimeButton = dialogView.findViewById(R.id.btn_onetime);
+        final Button dailyButton = dialogView.findViewById(R.id.btn_daily);
+        final RadioButton radioBtnOneTime = dialogView.findViewById(R.id.radio_btn_onetime);
+        final RadioButton radioBtnDaily = dialogView.findViewById(R.id.radio_btn_daily);
+        final RadioButton radioBtnWeekly = dialogView.findViewById(R.id.radio_btn_weekly);
+        final RadioButton radioBtnMonthly = dialogView.findViewById(R.id.radio_btn_monthly);
+        final RadioButton radioBtnYearly = dialogView.findViewById(R.id.radio_btn_yearly);
+
 
         // Setup the spinner with frequencies
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.goal_frequencies, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        frequencySpinner.setAdapter(adapter);
+        ArrayAdapter<CharSequence> adapterDay = ArrayAdapter.createFromResource(this,
+                R.array.day_frequencies, android.R.layout.simple_spinner_item);
+        adapterDay.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinDay.setAdapter(adapterDay);
+        spinWeek.setAdapter(adapterDay);
 
-        final Calendar calendar = Calendar.getInstance();
-        final SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.US);
+        // Setup the spinner with frequencies
+        ArrayAdapter<CharSequence> adapterRecur = ArrayAdapter.createFromResource(this,
+                R.array.recur_frequencies, android.R.layout.simple_spinner_item);
+        adapterRecur.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinFreq.setAdapter(adapterRecur);
+
+        final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
+        final String formattedToday = sdf.format(today.getTime());
         // Initially set the button text to "Select Starting Date"
-        selectStartDateButton.setText("Select Starting Date");
+        yearlyButton.setText(formattedToday);
+        oneTimeButton.setText(allFormattedToday);
+        dailyButton.setText(allFormattedToday);
 
-        // DatePickerDialog logic
-        DatePickerDialog.OnDateSetListener date = (view, year, monthOfYear, dayOfMonth) -> {
+        Calendar calendar = Calendar.getInstance();
+
+        // DatePickerDialog Yearly logic
+        DatePickerDialog.OnDateSetListener dateYear = (view, year, monthOfYear, dayOfMonth) -> {
             calendar.set(Calendar.YEAR, year);
             calendar.set(Calendar.MONTH, monthOfYear);
             calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 
             // Update the button text with the selected date
-            selectStartDateButton.setText(sdf.format(calendar.getTime()));
+            yearlyButton.setText(sdf.format(calendar.getTime()));
         };
 
-        selectStartDateButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, date,
+        // DatePickerDialog Daily logic
+        DatePickerDialog.OnDateSetListener dateDaily = (view, year, monthOfYear, dayOfMonth) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, monthOfYear);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+            // Update the button text with the selected date
+            dailyButton.setText(dateFormat.format(calendar.getTime()));
+        };
+
+        // DatePickerDialog One-time logic
+        DatePickerDialog.OnDateSetListener dateOneTime = (view, year, monthOfYear, dayOfMonth) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, monthOfYear);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+            // Update the button text with the selected date
+            oneTimeButton.setText(dateFormat.format(calendar.getTime()));
+        };
+
+        yearlyButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateYear,
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)).show());
 
-        builder.setView(dialogView);
+        dailyButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateDaily,
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)).show());
+
+        oneTimeButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateOneTime,
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)).show());
 
         // Handle the "Add" button
         builder.setPositiveButton("Add", (dialog, which) -> {
             final String goalText = editTextGoal.getText().toString().trim();
-            final String frequency = frequencySpinner.getSelectedItem().toString();
-            final Integer freqOccur = ((Integer.valueOf(calendar.get(Calendar.DAY_OF_MONTH) - 1))/7) + 1;
+            Integer freqMonth = -1, freqOccur = -1, freqDay = -1;
+            String freqType = "", freqDayString = "";
+            if (radioBtnOneTime.isChecked()) {
+                freqType = "One-time";
+            } else if (radioBtnDaily.isChecked()) {
+                freqType = "Daily";
+                freqMonth = calendar.get(Calendar.MONTH);
+                freqDay = calendar.get(Calendar.DAY_OF_WEEK)-1;
+            } else if (radioBtnWeekly.isChecked()) {
+                freqType = "Weekly";
+                freqDayString = spinWeek.getSelectedItem().toString();
+            } else if (radioBtnMonthly.isChecked()) {
+                freqType = "Monthly";
+                freqOccur = Integer.valueOf(spinFreq.getSelectedItem().toString().substring(0,1));
+                freqDayString = spinDay.getSelectedItem().toString();
+            } else if (radioBtnYearly.isChecked()) {
+                freqType = "Yearly";
+            }
+            GoalEntity complete = new GoalEntity(goalText, false, freqType, freqDayString, freqMonth, freqDay, freqOccur);
+            //final Integer freqOccur = ((Integer.valueOf(calendar.get(Calendar.DAY_OF_MONTH) - 1))/7) + 1;
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
 
@@ -204,15 +274,13 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a goal.", Toast.LENGTH_SHORT).show());
             } else if (findSameGoal != null) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
-            } else if (selectStartDateButton.getText().equals("Select Starting Date") && !frequency.equals("One-time")) {
+            } else if (yearlyButton.getText().equals(formattedToday) && !radioBtnOneTime.isChecked()) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a date.", Toast.LENGTH_SHORT).show());
-            } else if (frequency.equals("One-time") && !selectStartDateButton.getText().equals("Select Starting Date")) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "One-time goals cannot have a date.", Toast.LENGTH_SHORT).show());
-            } else if (startTime < currentTime && !selectStartDateButton.getText().equals("Select Starting Date")) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a valid time.", Toast.LENGTH_SHORT).show());
+            } else if (startTime < currentTime) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a valid time.", Toast.LENGTH_SHORT).show());
             }
             else {
-                new Thread(() -> goalDao.insert(new GoalEntity(goalText, false, frequency, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), freqOccur, daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)- 1]))).start();
+                new Thread(() -> goalDao.insert(complete)).start();
             }
         });
 
@@ -260,6 +328,8 @@ public class MainActivity extends AppCompatActivity {
             default: thirtyDayMonth = false;
                 break;
         }
+
+        if (thirtyDayMonth)
         //Move forward
         if (occurrence == 1 && freqOccur == 5 && thirtyDayMonth && todayMonth != goal.getFreqMonth() + 1) {
             freqOccur = 1;
@@ -284,4 +354,5 @@ public class MainActivity extends AppCompatActivity {
 
         return dayOfMonth == goalDayOfMonth && goalMonth == currMonth;
     }
+
 }

@@ -91,7 +91,7 @@ public class GoalEntity {
         return freqDay;
     }
 
-    public GoalEntity(String goalText, boolean isChecked, String frequencyType, Integer freqMonth, Integer freqDay, Integer freqOccur, String freqDayString) {
+    public GoalEntity(String goalText, boolean isChecked, String frequencyType, String freqDayString, Integer freqMonth, Integer freqDay, Integer freqOccur) {
         this.goalText = goalText;
         this.isChecked = isChecked;
         this.frequencyType = frequencyType;
