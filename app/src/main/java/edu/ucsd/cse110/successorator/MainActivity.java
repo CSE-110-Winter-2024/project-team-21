@@ -223,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         oneTimeButton.setText(allFormattedToday);
         dailyButton.setText(allFormattedToday);
 
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = today;
 
         // DatePickerDialog Yearly logic
         DatePickerDialog.OnDateSetListener dateYear = (view, year, monthOfYear, dayOfMonth) -> {
@@ -361,15 +361,22 @@ public class MainActivity extends AppCompatActivity {
         int freqOccur = goal.getFreqOccur();
         int dayOfMonth = today.get(Calendar.DAY_OF_MONTH);
         int occurrence = ((dayOfMonth - 1) / 7) + 1;
+
         int goalMonth = goal.getFreqMonth();
-
         int todayMonth = today.get(Calendar.MONTH) + 1;
-        int todayLastMonth = (todayMonth == 1) ? 12: todayMonth - 1;
-        int goalNextMonth = (goalMonth == 12) ? 1 : goalMonth + 1;
+        int todayLastMonth = todayMonth - 1;
 
+        int occurForThirtyDay = (((dayOfMonth - 7 + 30) - 1) / 7) + 1;
+        int thirtyOneDayOccur = (((dayOfMonth - 7 + 31) - 1) / 7) + 1;
         //No fifth day of this month
-        if (isThirtyDayMonth(todayMonth) && isThirtyDayMonth(todayLastMonth) && todayMonth != goalNextMonth) {
-            freqOccur = 1;
+        if (todayDay.equals(targetDayOfWeek) && occurrence == 1) {
+            if (isThirtyDayMonth(todayLastMonth) && occurForThirtyDay == 4) {
+                freqOccur = 1;
+            } else {
+                if (thirtyOneDayOccur == 4) {
+                    freqOccur = 1;
+                }
+            }
         }
 
         return todayDay.equals(targetDayOfWeek) && occurrence == freqOccur;
@@ -406,6 +413,17 @@ public class MainActivity extends AppCompatActivity {
                 return false;
         }
     }
+
+    /*private boolean existsFifthOccurrence(int dayOfMonth) {
+        if (isThirtyDayMonth(month)) {
+            if (dayOfMonth + 7 > 30) {
+                return false;
+            }
+        }
+        else {
+
+        }
+    }*/
 
     private void clearRadioGroupSelection(RadioButton selectedRadioButton) {
         for (RadioButton rb : radioButtons) {
