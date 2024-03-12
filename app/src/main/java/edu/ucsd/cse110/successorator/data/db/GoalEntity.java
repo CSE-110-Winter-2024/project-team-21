@@ -98,6 +98,7 @@ public class GoalEntity {
         this.freqMonth = freqMonth;
         this.freqDayString = freqDayString;
         this.freqOccur = freqOccur;
+        this.freqTimeInMilli = freqTimeInMilli;
     }
 
     @Override

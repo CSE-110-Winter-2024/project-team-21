@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     String allFormattedToday;
 
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    final String[] freqTypes = {"One-time","Daily","Weekly","Monthly","Yearly"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,11 +96,11 @@ public class MainActivity extends AppCompatActivity {
         goalDao.getAllGoals().observe(this, goalEntities -> {
             List<GoalEntity> filteredGoals = goalEntities.stream()
                     .filter(goal ->
-                            goal.getFrequencyType().equals("One-time")
-                            || (goal.getFrequencyType().equals("Daily") && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                            || (goal.getFrequencyType().equals("Weekly") && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                            || (goal.getFrequencyType().equals("Monthly") && isCorrectMonthlyOccurrence(goal))
-                            || (goal.getFrequencyType().equals("Yearly") && isCorrectYearlyOccurrence(goal)))
+                            goal.getFrequencyType().equals(freqTypes[0])
+                            || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                            || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                            || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                            || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
                     .collect(Collectors.toList());
             shownGoalsCount = filteredGoals.size();
             adapter.updateGoals(filteredGoals);
@@ -125,6 +126,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        today = Calendar.getInstance();
+        updateDate();
+        goalDao.getAllGoals().observe(this, goalEntities -> {
+            List<GoalEntity> filteredGoals = goalEntities.stream()
+                    .filter(goal ->
+                            goal.getFrequencyType().equals(freqTypes[0])
+                                    || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                    || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                                    || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                                    || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
+                    .collect(Collectors.toList());
+            shownGoalsCount = filteredGoals.size();
+            adapter.updateGoals(filteredGoals);
+            updateNoGoalsVisibility(shownGoalsCount);
+        });
+    }
+
     private void advanceTimeByOneDay() {
         // Try to parse the date from the TextView, if it exists
         try {
@@ -147,11 +168,11 @@ public class MainActivity extends AppCompatActivity {
         goalDao.getAllGoals().observe(this, goalEntities -> {
             List<GoalEntity> filteredGoals = goalEntities.stream()
                     .filter(goal ->
-                            goal.getFrequencyType().equals("One-time")
-                            || (goal.getFrequencyType().equals("Daily") && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                            || (goal.getFrequencyType().equals("Weekly") && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                            || (goal.getFrequencyType().equals("Monthly") && isCorrectMonthlyOccurrence(goal))
-                            || (goal.getFrequencyType().equals("Yearly") && isCorrectYearlyOccurrence(goal)))
+                            goal.getFrequencyType().equals(freqTypes[0])
+                            || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                            || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                            || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                            || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
                     .collect(Collectors.toList());
             shownGoalsCount = filteredGoals.size();
             adapter.updateGoals(filteredGoals);
@@ -264,30 +285,27 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("Save", (dialog, which) -> {
             final String goalText = editTextGoal.getText().toString().trim();
             Integer freqMonth = -1, freqOccur = -1;
-            long freqTimeInMilli = -1;
+            long freqTimeInMilli = calendar.getTimeInMillis();
             String freqType = "", freqDayString = "";
             if (radioBtnOneTime.isChecked()) {
-                freqType = "One-time";
-                freqTimeInMilli = calendar.getTimeInMillis();
+                freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
-                freqType = "Daily";
+                freqType = freqTypes[1];
                 freqDayString = daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1];
                 freqTimeInMilli = calendar.getTimeInMillis();
             } else if (radioBtnWeekly.isChecked()) {
-                freqType = "Weekly";
+                freqType = freqTypes[2];
                 freqDayString = spinWeek.getSelectedItem().toString();
             } else if (radioBtnMonthly.isChecked()) {
-                freqType = "Monthly";
-                freqMonth = Calendar.MONTH;
+                freqType = freqTypes[3];
+                freqMonth = Calendar.MONTH +1;
                 freqOccur = Integer.valueOf(spinFreq.getSelectedItem().toString().substring(0,1));
                 freqDayString = spinDay.getSelectedItem().toString();
             } else if (radioBtnYearly.isChecked()) {
-                freqType = "Yearly";
-                freqTimeInMilli = calendar.getTimeInMillis();
+                freqType = freqTypes[4];
             }
 
             GoalEntity complete = new GoalEntity(goalText, false, freqType, freqDayString, freqMonth, freqTimeInMilli, freqOccur);
-            //final Integer freqOccur = ((Integer.valueOf(calendar.get(Calendar.DAY_OF_MONTH) - 1))/7) + 1;
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -306,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
             } else if (yearlyButton.getText().equals(formattedToday) && radioBtnYearly.isChecked()) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a date.", Toast.LENGTH_SHORT).show());
-            } else if (startTime < currentTime) {
+            } else if (startTime < currentTime && !radioBtnYearly.isChecked()) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a valid time.", Toast.LENGTH_SHORT).show());
             }
             else {
@@ -349,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
         int todayLastMonth = (todayMonth == 1) ? 12: todayMonth - 1;
         int goalNextMonth = (goalMonth == 12) ? 1 : goalMonth + 1;
 
-        //Move forward
+        //No fifth day of this month
         if (isThirtyDayMonth(todayMonth) && isThirtyDayMonth(todayLastMonth) && todayMonth != goalNextMonth) {
             freqOccur = 1;
         }
@@ -358,20 +376,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isCorrectYearlyOccurrence(GoalEntity goal) {
+        Calendar targetDate = Calendar.getInstance();
+        targetDate.setTimeInMillis(goal.getFreqTimeInMilli());
 
-        int goalDayOfMonth = goal.getFreqMonth();
-        int goalMonth = goal.getFreqMonth();
+        int goalDay = targetDate.get(Calendar.DAY_OF_MONTH);
+        int goalMonth = targetDate.get(Calendar.MONTH) + 1;
 
         int dayOfMonth = today.get(Calendar.DAY_OF_MONTH);
-        int currMonth = today.get(Calendar.MONTH);
+        int currMonth = today.get(Calendar.MONTH) + 1;
+        int currYear = today.get(Calendar.YEAR);
 
-        //Move forward
-        if (dayOfMonth == 1 && goalDayOfMonth == 31 && currMonth > goalMonth + 1) {
-            goalDayOfMonth = 1;
-            goalMonth = currMonth;
+        //Leap Day
+        if ((currYear % 4 != 0) || ((currYear % 100 == 0) && (currYear % 400 != 0)) && goalDay == 29 && goalMonth == 2) {
+                goalDay = 1;
+                goalMonth = 3;
         }
 
-        return dayOfMonth == goalDayOfMonth && goalMonth == currMonth;
+        return currMonth == goalMonth && goalDay == dayOfMonth;
     }
 
     private boolean isThirtyDayMonth(int month) {
