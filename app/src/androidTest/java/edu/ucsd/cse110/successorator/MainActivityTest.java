@@ -1,7 +1,9 @@
 package edu.ucsd.cse110.successorator;
 
+import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
@@ -9,24 +11,21 @@ import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
+import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.*;
-import androidx.test.espresso.action.ViewActions;
+import androidx.test.espresso.contrib.PickerActions;
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +36,7 @@ import static androidx.test.core.app.ActivityScenario.launch;
 import static junit.framework.TestCase.assertEquals;
 
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
@@ -44,6 +44,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Paint;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.TextView;
 
 import androidx.lifecycle.Lifecycle;
@@ -144,7 +145,7 @@ public class MainActivityTest {
     public void test1_goalAdditionCancelled_NoGoalsTextStillDisplayed() {
         onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("New Goal"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("New Goal"), closeSoftKeyboard());
         onView(withText("Cancel")).perform(click());
         onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
     }
@@ -154,7 +155,7 @@ public class MainActivityTest {
     public void test2_noGoalsText_VisibilityChangesAfterAddingGoal() {
         onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         onView(withId(R.id.no_goals_text)).check(matches(not(isDisplayed())));
     }
@@ -182,7 +183,7 @@ public class MainActivityTest {
             }
         });
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         onView(withId(R.id.goals_recycler_view)).check(new ViewAssertion() {
             @Override
@@ -201,7 +202,7 @@ public class MainActivityTest {
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         //Click the checkbox of goal
@@ -240,14 +241,14 @@ public class MainActivityTest {
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         Thread.sleep(1000);
@@ -262,7 +263,7 @@ public class MainActivityTest {
         onView(withText(goalText2)).check(matches(withText(goalText2)));
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 
@@ -290,12 +291,12 @@ public class MainActivityTest {
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         Thread.sleep(1000);
@@ -319,4 +320,7 @@ public class MainActivityTest {
         onView(withText(goalText)).check(matches(withText(goalText)));
         onView(withText(goalText2)).check(matches(withText(goalText2)));
     }
+
+
+
 }

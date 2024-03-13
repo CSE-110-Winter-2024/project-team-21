@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -323,8 +324,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please check a goal frequency.", Toast.LENGTH_SHORT).show());
             } else if (findSameGoal != null) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
-            } else if (yearlyButton.getText().equals(formattedToday) && radioBtnYearly.isChecked()) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a date.", Toast.LENGTH_SHORT).show());
+
             } else if (startTime < currentTime && !radioBtnYearly.isChecked()) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a valid time.", Toast.LENGTH_SHORT).show());
             }
@@ -388,21 +388,25 @@ public class MainActivity extends AppCompatActivity {
         targetDate.setTimeInMillis(goal.getFreqTimeInMilli());
 
         int goalDay = targetDate.get(Calendar.DAY_OF_MONTH);
-        int goalMonth = targetDate.get(Calendar.MONTH) + 1;
+        int goalMonth = targetDate.get(Calendar.MONTH);
 
         int dayOfMonth = today.get(Calendar.DAY_OF_MONTH);
-        int currMonth = today.get(Calendar.MONTH) + 1;
+        int currMonth = today.get(Calendar.MONTH);
         int currYear = today.get(Calendar.YEAR);
 
-        //Leap Day
-        if ((currYear % 4 != 0) || ((currYear % 100 == 0) && (currYear % 400 != 0)) && goalDay == 29 && goalMonth == 2) {
-                goalDay = 1;
-                goalMonth = 3;
+        // Handle Leap Day
+        if (goalMonth == Calendar.FEBRUARY && goalDay == 29) {
+            if (!isLeapYear(currYear) && currMonth == Calendar.FEBRUARY && dayOfMonth == 28) {
+                return true;
+            }
         }
 
         return currMonth == goalMonth && goalDay == dayOfMonth;
     }
 
+    private boolean isLeapYear(int year) {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    }
     private boolean isThirtyDayMonth(int month) {
         switch (month) {
             case 4:
