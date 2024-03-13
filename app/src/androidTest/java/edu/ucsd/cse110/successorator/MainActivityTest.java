@@ -13,7 +13,6 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.*;
 import androidx.test.espresso.action.ViewActions;
@@ -25,8 +24,6 @@ import androidx.test.filters.LargeTest;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,25 +37,17 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
-import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Paint;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 
-import org.junit.Assert;
 import org.junit.runners.MethodSorters;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-
-import edu.ucsd.cse110.successorator.data.db.AppDatabase;
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
 
 /**
  * Instrumented test, which will execute on an Android device.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/dropdown_menu"
+        android:title="Dropdown Menu"
+        android:icon="@drawable/dropdownicon_svg"
+        android:orderInCategory="1"
+        app:iconTint="@color/black"
+        app:showAsAction="always" />
+</menu>

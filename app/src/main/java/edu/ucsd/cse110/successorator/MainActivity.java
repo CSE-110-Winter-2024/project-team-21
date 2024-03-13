@@ -1,18 +1,28 @@
 package edu.ucsd.cse110.successorator;
 
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
+
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.PopupMenu;
+import android.widget.Spinner;
 import android.widget.TextView;
-import androidx.room.Room;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import java.text.ParseException;
@@ -20,9 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import androidx.lifecycle.ViewModelProvider;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -30,14 +37,6 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
-import edu.ucsd.cse110.successorator.data.db.AppDatabase;
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.data.db.GoalEntity;
-
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
 import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
@@ -52,7 +51,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TextView noGoalsTextView;
     private GoalsAdapter adapter;
-    private List<GoalEntity> goalsList = new ArrayList<>();
+    private LiveData<List<GoalEntity>> goalsList; // = new ArrayList<>();
+    private String currListCategory;
+    private String todayDate;
+    private String tomorrowDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,20 +65,25 @@ public class MainActivity extends AppCompatActivity {
                 AppDatabase.class, "SuccessListDatabase").allowMainThreadQueries().build();
         goalDao = db.goalDao();
 
+        currListCategory = "Today";
         dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-        adapter = new GoalsAdapter(goalsList, goalDao);
+        goalsList = goalDao.getGoalsByListCategory(currListCategory); //.getValue();
+        adapter = new GoalsAdapter(goalsList.getValue(), goalDao);
         forwardButton = findViewById(R.id.forwardButton); // Find the forward button
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        goalDao.getAllGoals().observe(this, goalEntities -> {
+
+        goalDao.getGoalsByListCategory("Today").observe(this, goalEntities ->  {
             adapter.updateGoals(goalEntities);
             updateNoGoalsVisibility();
         });
 
-        updateDate();
+        todayDate = updateDate();
+        dateTextView.setText(todayDate);
+        tomorrowDate = getTomorrowDate(); // so i dont have to call function every time list is selected
 
         // Set OnClickListener for FloatingActionButton to add new goals
         findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
@@ -97,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // BUG: Skips day by one too much, so 2 days in the future instead of 1
     private void advanceTimeByOneDay() {
         // Define the date format
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
@@ -104,24 +112,31 @@ public class MainActivity extends AppCompatActivity {
         // Initialize a calendar instance
         Calendar calendar = Calendar.getInstance();
 
-        // Try to parse the date from the TextView, if it exists
+      //   Try to parse the date from the TextView, if it exists
         try {
-            Date displayedDate = dateFormat.parse(dateTextView.getText().toString());
+            Date displayedDate = dateFormat.parse(todayDate);
             calendar.setTime(displayedDate);
+
         } catch (ParseException e) {
             // If parsing fails, the current date is used
             e.printStackTrace();
         }
-
-        // Advance the date by one day
         calendar.add(Calendar.DAY_OF_MONTH, 1);
+        todayDate = dateFormat.format(calendar.getTime());
 
-        // Update the TextView with the new date
-        String currentDate = dateFormat.format(calendar.getTime());
-        dateTextView.setText(currentDate);
+        // Get tomorrow's date given we advanced the day by 1 and assign it to var
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        tomorrowDate = dateFormat.format(calendar.getTime());
+        if (currListCategory.equals("Today")) {dateTextView.setText(todayDate);}
+        else if (currListCategory.equals("Tomorrow")) {dateTextView.setText(tomorrowDate);}
 
         // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
+
+        // Switch goals marked 'Tomorrow' which are not checked off to 'Today' view
+        goalDao.rolloverTomorrowToToday();
+        adapter.notifyDataSetChanged();
+
     }
 
     private void showAddGoalDialog() {
@@ -143,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            goalDao.insert(new GoalEntity(goalText, false));
+                            goalDao.insert(new GoalEntity(goalText, false, currListCategory));
                         }
                     }).start();
                 } else if (findSameGoal != null) {
@@ -166,13 +181,73 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateDate() {
+    private String updateDate() {
         // Get the current date
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
-        String currentDate = dateFormat.format(calendar.getTime());
+        return dateFormat.format(calendar.getTime());
 
         // Update the TextView with the current date
-        dateTextView.setText(currentDate);
+        //dateTextView.setText(currentDate);
+    }
+    private String getTomorrowDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 1); // add one day to get tmrw date
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
+        // i used the same pattern as seen before
+        return dateFormat.format(calendar.getTime());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.dropdown_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.dropdown_menu) {
+            PopupMenu popupMenu = new PopupMenu(this, findViewById(R.id.dropdown_menu));
+            popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem menuItem) {
+                    String selectedOption = menuItem.getTitle().toString();
+                    currListCategory = selectedOption;
+                    LiveData<List<GoalEntity>> goalsLiveData = goalDao.getGoalsByListCategory(selectedOption);
+
+                    switch (selectedOption) {
+                        case "Today":
+                            dateTextView.setText(todayDate);
+                            break;
+                        case "Tomorrow":
+                            dateTextView.setText(tomorrowDate);
+                            break;
+                        case "Pending":
+                            dateTextView.setText("Pending");
+                            break;
+                        case "Recurring":
+                            dateTextView.setText("Recurring");
+                            break;
+                    }
+
+                    goalsLiveData.observe(MainActivity.this, new Observer<List<GoalEntity>>() {
+                        @Override
+                        public void onChanged(List<GoalEntity> goalEntities) {
+                            adapter.setGoalsList(goalEntities);
+                        }
+                    });
+
+                    return true;
+                }
+            });
+
+            popupMenu.show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+
     }
 }

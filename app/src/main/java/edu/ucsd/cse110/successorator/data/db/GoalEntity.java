@@ -24,6 +24,8 @@ public class GoalEntity {
         return isChecked;
     }
 
+    public String getListCategory() {return listCategory; }
+
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     private Integer id = null;
@@ -33,6 +35,9 @@ public class GoalEntity {
 
     @ColumnInfo(name = "isChecked")
     private boolean isChecked;
+
+    @ColumnInfo(name = "listCategory")
+    private String listCategory;
 
     public void setId(Integer id) {
         this.id = id;
@@ -46,9 +51,12 @@ public class GoalEntity {
         isChecked = checked;
     }
 
-    public GoalEntity(String goalText, boolean isChecked) {
+    public void setListCategory(String listCategory) { this.listCategory = listCategory; }
+
+    public GoalEntity(String goalText, boolean isChecked, String listCategory) {
         this.goalText = goalText;
         this.isChecked = isChecked;
+        this.listCategory = listCategory;
     }
 
     @Override
@@ -56,7 +64,7 @@ public class GoalEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         GoalEntity goal = (GoalEntity) o;
-        return Objects.equals(goalText, goal.goalText) && Objects.equals(isChecked, goal.isChecked);
+        return Objects.equals(goalText, goal.goalText) && Objects.equals(isChecked, goal.isChecked) && Objects.equals(listCategory, goal.listCategory);
     }
     @Override
     public int hashCode() {

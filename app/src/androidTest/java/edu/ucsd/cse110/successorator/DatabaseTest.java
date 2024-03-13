@@ -62,7 +62,7 @@ public class DatabaseTest {
         assertNull("Dao should be empty.", goalDao.isItEmpty());
 
         // Insert a test goal into the database
-        GoalEntity testGoal = new GoalEntity("Test Goal Checkbox", false);
+        GoalEntity testGoal = new GoalEntity("Test Goal Checkbox", false, "Today");
         goalDao.insert(testGoal);
 
         //NEED to assign an entity in the Dao to a variable because of PrimaryKey
