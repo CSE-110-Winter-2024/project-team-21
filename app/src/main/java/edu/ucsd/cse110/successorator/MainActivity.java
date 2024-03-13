@@ -218,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
 
         final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
         final String formattedToday = sdf.format(today.getTime());
+        allFormattedToday = dateFormat.format(today.getTime());
         // Initially set the button text to "Select Starting Date"
         yearlyButton.setText(formattedToday);
         oneTimeButton.setText(allFormattedToday);
