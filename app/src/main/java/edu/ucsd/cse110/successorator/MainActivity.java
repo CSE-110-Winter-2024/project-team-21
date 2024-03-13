@@ -414,17 +414,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*private boolean existsFifthOccurrence(int dayOfMonth) {
-        if (isThirtyDayMonth(month)) {
-            if (dayOfMonth + 7 > 30) {
-                return false;
-            }
-        }
-        else {
-
-        }
-    }*/
-
     private void clearRadioGroupSelection(RadioButton selectedRadioButton) {
         for (RadioButton rb : radioButtons) {
             if (!rb.equals(selectedRadioButton)) {
