@@ -470,7 +470,7 @@ public class MainActivityTest {
         onView(withText("Clear Focus")).perform(click());
 
         //Everything Appears
-
+    }
     @Test
     public void test8_US4_AddGoalWithSpecificContext() {
         final String goalText = "Draft research paper";
