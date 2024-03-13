@@ -12,6 +12,15 @@
         android:layout_weight="1"
         android:textSize="18sp" />
 
+    <!-- New TextView for context -->
+    <TextView
+        android:id="@+id/context_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
     <CheckBox
         android:id="@+id/goal_checkbox"
         android:layout_width="wrap_content"

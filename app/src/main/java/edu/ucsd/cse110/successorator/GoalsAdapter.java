@@ -50,6 +50,19 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         String goalText = goalsList.get(position).getGoalText();
         GoalEntity goalEntity = goalDao.findByGoalText(goalText);
 
+        GoalEntity goal = goalsList.get(position);
+        holder.goalTextView.setText(goal.getGoalText());
+        holder.goalCheckBox.setChecked(goal.isChecked());
+
+        String context = goal.getContext();
+        if (context != null && !context.isEmpty()) {
+            holder.contextTextView.setText(context);
+            holder.contextTextView.setVisibility(View.VISIBLE);
+        } else {
+            holder.contextTextView.setVisibility(View.GONE);
+        }
+
+
         //fixed issue if goalEntity would not be found aka null
         if (goalEntity == null) {
 
@@ -86,12 +99,17 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         TextView goalTextView;
         CheckBox goalCheckBox;
 
+        TextView contextTextView; // TextView for context display
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             goalTextView = itemView.findViewById(R.id.goal_text_view);
             goalCheckBox = itemView.findViewById(R.id.goal_checkbox);
+            contextTextView = itemView.findViewById(R.id.context_text_view);
         }
     }
+
+
 
     public void removeCheckedOffGoals() {
         goalDao.removeCompletedFromDao();
