@@ -2,6 +2,7 @@ package edu.ucsd.cse110.successorator;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.longClick;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
@@ -307,5 +308,27 @@ public class MainActivityTest {
         //Check if both goalTexts stay
         onView(withText(goalText)).check(matches(withText(goalText)));
         onView(withText(goalText2)).check(matches(withText(goalText2)));
+    }
+
+    public void test8_goalMovesListsWhenPrompted() throws InterruptedException {
+        final String goalText = "Test Goal Delete";
+       // final String goalText2 = "Test Goal Delete2";
+
+        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.actionOnItem(
+                        hasDescendant(withText(goalText)), longClick()));
+        String menuItemText = "Tomorrow";
+        onView(withText(menuItemText)).perform(click());
+
+        // NOW switch to tomorrow view and check if it moved over
+        onView(withId(R.id.dropdown_menu)).perform(click());
+        onView(withText("Tomorrow")).perform(click());
+        onView(withText(goalText)).check(matches(isDisplayed()));
     }
 }

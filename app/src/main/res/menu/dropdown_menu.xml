@@ -5,6 +5,6 @@
         android:title="Dropdown Menu"
         android:icon="@drawable/dropdownicon_svg"
         android:orderInCategory="1"
-        app:iconTint="@color/black"
+        app:iconTint="@color/white"
         app:showAsAction="always" />
 </menu>
