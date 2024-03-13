@@ -310,25 +310,59 @@ public class MainActivityTest {
         onView(withText(goalText2)).check(matches(withText(goalText2)));
     }
 
-    public void test8_goalMovesListsWhenPrompted() throws InterruptedException {
-        final String goalText = "Test Goal Delete";
-       // final String goalText2 = "Test Goal Delete2";
+    public void test8_goalMovesToListWhenPrompted() throws InterruptedException {
+        final String newGoalText = "New Test Goal";
 
-        //Add a goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(newGoalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.goals_recycler_view)).perform(
+                RecyclerViewActions.actionOnItem(hasDescendant(withText(newGoalText)), longClick()));
+
+        onView(withText("Tomorrow")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.dropdown_menu)).perform(click());
+
+        onView(withText("Tomorrow")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.goals_recycler_view)).check(matches(hasDescendant(withText(newGoalText))));
+
+    }
+    @Test
+    public void testOptionTomorrowAvailableWhenLongClickGoal() throws InterruptedException {
+        final String goalText = "Goal for Tomorrow Option Test";
+
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        Thread.sleep(1000); // Let the UI update
+
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), longClick()));
+
+        onView(withText("Tomorrow")).check(matches(isDisplayed()));
+    }
+    @Test
+    public void testGoalNotInTodayAfterMovedToTomorrow() throws InterruptedException {
+        final String goalText = "Goal to Move to Tomorrow";
+
         onView(withId(R.id.add_goal_button)).perform(click());
         onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 
         onView(withId(R.id.goals_recycler_view))
-                .perform(RecyclerViewActions.actionOnItem(
-                        hasDescendant(withText(goalText)), longClick()));
-        String menuItemText = "Tomorrow";
-        onView(withText(menuItemText)).perform(click());
-
-        // NOW switch to tomorrow view and check if it moved over
-        onView(withId(R.id.dropdown_menu)).perform(click());
+                .perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), longClick()));
         onView(withText("Tomorrow")).perform(click());
-        onView(withText(goalText)).check(matches(isDisplayed()));
+        Thread.sleep(1000);
+
+        onView(withId(R.id.dropdown_menu)).perform(click());
+        onView(withText("Today")).perform(click());
+        Thread.sleep(1000);
+        onView(withId(R.id.goals_recycler_view)).check(matches(not(hasDescendant(withText(goalText)))));
     }
 }
