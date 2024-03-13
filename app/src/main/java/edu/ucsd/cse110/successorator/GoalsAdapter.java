@@ -47,46 +47,39 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String goalText = goalsList.get(position).getGoalText();
-        GoalEntity goalEntity = goalDao.findByGoalText(goalText);
-
         GoalEntity goal = goalsList.get(position);
-        holder.goalTextView.setText(goal.getGoalText());
-        holder.goalCheckBox.setChecked(goal.isChecked());
 
-        String context = goal.getContext();
-        if (context != null && !context.isEmpty()) {
-            holder.contextTextView.setText(context);
-            holder.contextTextView.setVisibility(View.VISIBLE);
-        } else {
-            holder.contextTextView.setVisibility(View.GONE);
-        }
+        if (goal != null) {
+            holder.goalTextView.setText(goal.getGoalText());
+            holder.goalCheckBox.setChecked(goal.isChecked());
 
+            String context = goal.getContext();
+            if (context != null && !context.isEmpty()) {
+                holder.contextTextView.setText(context);
+                holder.contextTextView.setVisibility(View.VISIBLE);
+            } else {
+                holder.contextTextView.setVisibility(View.GONE);
+            }
 
-        //fixed issue if goalEntity would not be found aka null
-        if (goalEntity == null) {
-
-        }
-        else {
-            boolean isChecked = goalEntity.isChecked();
-            holder.goalTextView.setText(goalText);
-            holder.goalCheckBox.setChecked(isChecked);
-
-            if (isChecked) {
+            if (goal.isChecked()) {
                 holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             } else {
                 holder.goalTextView.setPaintFlags(holder.goalTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
             }
+
+            holder.goalCheckBox.setOnClickListener(v -> {
+                goal.setChecked(holder.goalCheckBox.isChecked());
+                goalDao.update(goal);
+                notifyDataSetChanged();
+            });
+        } else {
+
+            holder.goalTextView.setText("");
+            holder.goalCheckBox.setChecked(false);
+            holder.contextTextView.setVisibility(View.GONE);
         }
-
-        holder.goalCheckBox.setOnClickListener(v -> {
-            boolean checked = holder.goalCheckBox.isChecked();
-            goalEntity.setChecked(checked);
-
-            goalDao.update(goalEntity);
-            notifyDataSetChanged();
-        });
     }
+
 
 
     @Override
