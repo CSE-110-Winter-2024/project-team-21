@@ -107,6 +107,10 @@ public class GoalEntity {
         return context;
     }
 
+    public String getListCategory() {
+        return listCategory;
+    }
+
     public GoalEntity(String goalText, boolean isChecked, String context, String frequencyType, String listCategory, String freqDayString, long freqTimeInMilli, Integer freqOccur, Integer freqMonth) {
         this.goalText = goalText;
         this.isChecked = isChecked;

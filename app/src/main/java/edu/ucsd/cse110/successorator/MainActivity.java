@@ -2,7 +2,10 @@ package edu.ucsd.cse110.successorator;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,10 +13,13 @@ import androidx.room.Room;
 
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -47,6 +53,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
@@ -56,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private GoalDao goalDao;
 
     Button forwardButton;
-    Button addGoalButton;
+    FloatingActionButton addGoalButton;
 
     private TextView dateTextView;
     private RecyclerView recyclerView;
@@ -68,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Fields to manage focus mode
     private boolean inFocusMode = false;
-    private String focusContext = null;
+    private String focusContext = "";
     //constants
     final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
 
@@ -109,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         allFormattedToday = dateFormat.format(today.getTime());
         currListCategory = "Today";
 
-        filterChanges(inFocusMode);
+        filterChanges();
 
         updateDate();
 
@@ -128,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         today = Calendar.getInstance();
         updateDate();
-        filterChanges(inFocusMode);
+        filterChanges();
     }
 
     private void advanceTimeByOneDay() {
@@ -150,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
-        filterChanges(inFocusMode);
+        filterChanges();
     }
 
     private void showAddGoalDialog() {
@@ -287,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
                 freqType = freqTypes[4];
             }
 
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, freqDayString,freqTimeInMilli, freqOccur, freqMonth);
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, freqDayString, currListCategory, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -408,22 +416,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void filterChanges(boolean inFocusMode) {
+    private void filterChanges() {
         final List<GoalEntity>[] filteredGoals = new List[]{new ArrayList<>()};
-        goalDao.getAllGoals().observe(this, goalEntities -> {
-            if (!inFocusMode) {
-                filteredGoals[0] = goalEntities.stream()
-                        .filter(goal ->
-                                goal.getFrequencyType().equals(freqTypes[0])
-                                        || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                                        || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                                        || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
-                                        || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
-                        .collect(Collectors.toList());
-            } else {
-                filteredGoals[0] = goalEntities.stream()
-                        .filter(goal -> goal.getContext().equals(focusContext))
-                        .collect(Collectors.toList());
+        goalDao.getGoalsByListCategory(currListCategory).observe(this, goalEntities -> {
+            filteredGoals[0] = goalEntities.stream().filter(goal ->
+                            goal.getFrequencyType().equals(freqTypes[0])
+                                    || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                    || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                                    || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                                    || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
+                            .collect(Collectors.toList());
+            if (inFocusMode) {
+                filteredGoals[0] = filteredGoals[0].stream()
+                            .filter(goal -> goal.getContext().equals(focusContext))
+                            .collect(Collectors.toList());
             }
             shownGoalsCount = filteredGoals[0].size();
             adapter.updateGoals(filteredGoals[0]);
@@ -440,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
                     // Apply the focus mode with the selected context
                     focusContext = contexts[which];
                     inFocusMode = true;
-                    filterChanges(inFocusMode);
+                    filterChanges();
                 })
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Clear Focus", (dialog, which) -> clearFocusMode());
@@ -449,9 +455,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void clearFocusMode() {
         inFocusMode = false;
-        focusContext = null;
+        focusContext = "N/A";
         // Reset to observe all goals without filtering
-        filterChanges(inFocusMode);
+        filterChanges();
     }
 
     private String getTomorrowDate() {
@@ -479,7 +485,6 @@ public class MainActivity extends AppCompatActivity {
                 public boolean onMenuItemClick(MenuItem menuItem) {
                     String selectedOption = menuItem.getTitle().toString();
                     currListCategory = selectedOption;
-                    LiveData<List<GoalEntity>> goalsLiveData = goalDao.getGoalsByListCategory(selectedOption);
 
                     switch (selectedOption) {
                         case "Today":
@@ -495,14 +500,7 @@ public class MainActivity extends AppCompatActivity {
                             dateTextView.setText("Recurring");
                             break;
                     }
-
-                    goalsLiveData.observe(MainActivity.this, new Observer<List<GoalEntity>>() {
-                        @Override
-                        public void onChanged(List<GoalEntity> goalEntities) {
-                            adapter.setGoalsList(goalEntities);
-                        }
-                    });
-
+                    filterChanges();
                     return true;
                 }
             });

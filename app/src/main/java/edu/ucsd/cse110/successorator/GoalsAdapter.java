@@ -95,7 +95,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             public boolean onLongClick(View v) {
                 String selectedGoalText = holder.goalTextView.getText().toString();
                 GoalEntity clickedGoal = goalsList.get(holder.getAdapterPosition());
-                GoalEntity alsoclicked = goalDao.findByGoalText(selectedGoalText);
+                GoalEntity alsoClicked = goalDao.findByGoalText(selectedGoalText);
                 int clickedGoalId = clickedGoal.getId();
 
                 PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
@@ -104,11 +104,8 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        //  if (item.getItemId() == R.id.goal_text_view) {
-                        Log.d("Test", "Were here");
                         switch(item.getTitle().toString()) {
                             case "Today":
-                                Log.d("PopupMenu", "Option Today clicked");
                                 updateListCategory(clickedGoal, "Today");
                                 return true;
                             case "Tomorrow":
@@ -164,6 +161,4 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         goalsList.remove(goal);
         notifyDataSetChanged();
     }
-
-
 }
