@@ -445,3 +445,4 @@ public class MainActivity extends AppCompatActivity {
         filterChanges(inFocusMode);
     }
 }
+
