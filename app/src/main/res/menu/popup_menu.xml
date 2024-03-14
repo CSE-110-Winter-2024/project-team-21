@@ -12,5 +12,4 @@
     <item
         android:id="@+id/recurring"
         android:title="Recurring"/>
-
 </menu>

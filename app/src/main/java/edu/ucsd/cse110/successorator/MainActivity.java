@@ -84,13 +84,6 @@ public class MainActivity extends AppCompatActivity {
             "E", "Errands"
     );
 
-    final Map<String, String> contextColors = Map.of(
-            "Home","#F8FB85",
-            "Work", "#C8FFFE",
-            "School", "#ECC8FF",
-            "Errands", "#C8FFD0"
-    );
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -308,12 +301,12 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        //initialize radioButtons
+        //initialize radioButtons and onClickListeners
         radioButtons = new ArrayList<>(List.of(radioBtnOneTime, radioBtnDaily, radioBtnWeekly, radioBtnMonthly, radioBtnYearly));
-
         for (RadioButton radio : radioButtons) {
             radio.setOnClickListener(radioButtonClickListener);
         }
+
         // Handle the "Add" button
         builder.setPositiveButton("Save", (dialog, which) -> {
 
