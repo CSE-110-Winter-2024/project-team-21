@@ -2,6 +2,7 @@ package edu.ucsd.cse110.successorator;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.longClick;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
@@ -526,5 +527,62 @@ public class MainActivityTest {
                 .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("Email Boss"))));
         onView(withId(R.id.goals_recycler_view))
                 .check(matches(hasDescendant(withChild(withText("Work")))));
+    }
+
+    @Test
+    public void test14_goalMovesToListWhenPrompted() throws InterruptedException {
+        final String newGoalText = "New Test Goal";
+
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(newGoalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.goals_recycler_view)).perform(
+                RecyclerViewActions.actionOnItem(hasDescendant(withText(newGoalText)), longClick()));
+
+        onView(withText("Tomorrow")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.dropdown_menu)).perform(click());
+
+        onView(withText("Tomorrow")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.goals_recycler_view)).check(matches(hasDescendant(withText(newGoalText))));
+
+    }
+    @Test
+    public void test15_optionTomorrowAvailableWhenLongClickGoal() throws InterruptedException {
+        final String goalText = "Goal for Tomorrow Option Test";
+
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        Thread.sleep(1000); // Let the UI update
+
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), longClick()));
+
+        onView(withText("Tomorrow")).check(matches(isDisplayed()));
+    }
+    @Test
+    public void test16_goalNotInTodayAfterMovedToTomorrow() throws InterruptedException {
+        final String goalText = "Goal to Move to Tomorrow";
+
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.goals_recycler_view))
+                .perform(RecyclerViewActions.actionOnItem(hasDescendant(withText(goalText)), longClick()));
+        onView(withText("Tomorrow")).perform(click());
+        Thread.sleep(1000);
+
+        onView(withId(R.id.dropdown_menu)).perform(click());
+        onView(withText("Today")).perform(click());
+        Thread.sleep(1000);
+        onView(withId(R.id.goals_recycler_view)).check(matches(not(hasDescendant(withText(goalText)))));
     }
 }

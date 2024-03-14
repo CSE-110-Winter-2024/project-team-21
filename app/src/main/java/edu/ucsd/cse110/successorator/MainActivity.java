@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private GoalDao goalDao;
 
     Button forwardButton;
+    Button addGoalButton;
 
     private TextView dateTextView;
     private RecyclerView recyclerView;
@@ -77,6 +78,12 @@ public class MainActivity extends AppCompatActivity {
 
     String allFormattedToday;
 
+    private String currListCategory;
+    private String todayDate;
+    private String tomorrowDate;
+
+
+
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     final String[] freqTypes = {"One-time","Daily", "Weekly", "Monthly", "Yearly"};
 
@@ -94,18 +101,20 @@ public class MainActivity extends AppCompatActivity {
         noGoalsTextView = findViewById(R.id.no_goals_text);
         adapter = new GoalsAdapter(goalsList, goalDao);
         forwardButton = findViewById(R.id.forwardButton); // Find the forward button
+        addGoalButton = findViewById(R.id.add_goal_button);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         shownGoalsCount = 0;
         today.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH), 0, 0, 0); // Set the calendar to 12:00 AM on the current day with hour, minute, second
         allFormattedToday = dateFormat.format(today.getTime());
+        currListCategory = "Today";
 
         filterChanges(inFocusMode);
 
         updateDate();
 
         // Set OnClickListener for FloatingActionButton to add new goals
-        findViewById(R.id.add_goal_button).setOnClickListener(v -> showAddGoalDialog());
+        addGoalButton.setOnClickListener(v -> showAddGoalDialog());
 
         // Forward button listener to advance the day
         forwardButton.setOnClickListener(v -> {
@@ -443,6 +452,65 @@ public class MainActivity extends AppCompatActivity {
         focusContext = null;
         // Reset to observe all goals without filtering
         filterChanges(inFocusMode);
+    }
+
+    private String getTomorrowDate() {
+        today.add(Calendar.DAY_OF_YEAR, 1); // add one day to get tmrw date
+
+        // i used the same pattern as seen before
+        return dateFormat.format(today.getTime());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.dropdown_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.dropdown_menu) {
+            PopupMenu popupMenu = new PopupMenu(this, findViewById(R.id.dropdown_menu));
+            popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem menuItem) {
+                    String selectedOption = menuItem.getTitle().toString();
+                    currListCategory = selectedOption;
+                    LiveData<List<GoalEntity>> goalsLiveData = goalDao.getGoalsByListCategory(selectedOption);
+
+                    switch (selectedOption) {
+                        case "Today":
+                            dateTextView.setText(todayDate);
+                            break;
+                        case "Tomorrow":
+                            dateTextView.setText(tomorrowDate);
+                            break;
+                        case "Pending":
+                            dateTextView.setText("Pending");
+                            break;
+                        case "Recurring":
+                            dateTextView.setText("Recurring");
+                            break;
+                    }
+
+                    goalsLiveData.observe(MainActivity.this, new Observer<List<GoalEntity>>() {
+                        @Override
+                        public void onChanged(List<GoalEntity> goalEntities) {
+                            adapter.setGoalsList(goalEntities);
+                        }
+                    });
+
+                    return true;
+                }
+            });
+
+            popupMenu.show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
 

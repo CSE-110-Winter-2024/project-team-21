@@ -41,4 +41,12 @@ public interface GoalDao {
     @Query("SELECT COUNT(*) FROM goals")
     int size();
 
+    @Query("SELECT * FROM goals WHERE listCategory = :listCategory")
+    LiveData<List<GoalEntity>> getGoalsByListCategory(String listCategory);
+
+    @Query("UPDATE goals SET listCategory = 'Today' WHERE listCategory = 'Tomorrow'")
+    void rolloverTomorrowToToday();
+
+    @Query("UPDATE goals SET listCategory = :newCategory WHERE id = :goalId")
+    void updateCategoryById(int goalId, String newCategory);
 }
