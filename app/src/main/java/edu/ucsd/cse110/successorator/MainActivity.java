@@ -5,29 +5,24 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
-import androidx.room.Room;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import java.text.ParseException;
@@ -35,13 +30,11 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import androidx.lifecycle.ViewModelProvider;
-import java.util.function.Consumer;
+
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -49,15 +42,7 @@ import edu.ucsd.cse110.successorator.data.db.AppDatabase;
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import edu.ucsd.cse110.successorator.data.db.AppDatabase;
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 public class MainActivity extends AppCompatActivity {
     private AppDatabase db;
@@ -81,19 +66,32 @@ public class MainActivity extends AppCompatActivity {
     final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
 
     private int shownGoalsCount;
-    private Spinner contextSpinner; // Spinner for selecting context
-    Calendar today = Calendar.getInstance();
+    private TextView contextTextView; // Spinner for selecting context
+    Calendar today;
 
     String allFormattedToday;
 
     private String currListCategory;
-    private String todayDate;
-    private String tomorrowDate;
+
+    private Calendar tomorrow;
 
 
 
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     final String[] freqTypes = {"One-time","Daily", "Weekly", "Monthly", "Yearly"};
+    final Map<String, String> contextStrings = Map.of(
+            "H","Home",
+            "W", "Work",
+            "S", "School",
+            "E", "Errands"
+    );
+
+    final Map<String, String> contextColors = Map.of(
+            "Home","#F8FB85",
+            "Work", "#C8FFFE",
+            "School", "#ECC8FF",
+            "Errands", "#C8FFD0"
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +111,13 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         shownGoalsCount = 0;
+
+        today = Calendar.getInstance();
         today.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH), 0, 0, 0); // Set the calendar to 12:00 AM on the current day with hour, minute, second
+
+        tomorrow = (Calendar) today.clone();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
+
         allFormattedToday = dateFormat.format(today.getTime());
         currListCategory = "Today";
 
@@ -135,6 +139,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         today = Calendar.getInstance();
+        tomorrow = (Calendar) today.clone();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
         updateDate();
         filterChanges();
     }
@@ -152,9 +158,11 @@ public class MainActivity extends AppCompatActivity {
         // Advance the date by one day
         today.add(Calendar.DAY_OF_MONTH, 1);
 
+        tomorrow = (Calendar) today.clone();
+        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
+
         // Update the TextView with the new date
-        String currentDate = dateFormat.format(today.getTime());
-        dateTextView.setText(currentDate);
+        updateDate();
 
         // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
@@ -174,7 +182,10 @@ public class MainActivity extends AppCompatActivity {
         final Spinner spinDay = dialogView.findViewById(R.id.spin_day);
         final Spinner spinFreq = dialogView.findViewById(R.id.spin_recurring);
         final Spinner spinWeek = dialogView.findViewById(R.id.spin_weekly);
-        final Spinner spinContext = dialogView.findViewById(R.id.spin_context);
+        final TextView homeContext = dialogView.findViewById(R.id.homeContext);
+        final TextView workContext = dialogView.findViewById(R.id.workContext);
+        final TextView schoolContext = dialogView.findViewById(R.id.schoolContext);
+        final TextView errandsContext = dialogView.findViewById(R.id.errandsContext);
         final Button yearlyButton = dialogView.findViewById(R.id.button_select_start_date);
         final Button oneTimeButton = dialogView.findViewById(R.id.btn_onetime);
         final Button dailyButton = dialogView.findViewById(R.id.btn_daily);
@@ -184,6 +195,15 @@ public class MainActivity extends AppCompatActivity {
         final RadioButton radioBtnMonthly = dialogView.findViewById(R.id.radio_btn_monthly);
         final RadioButton radioBtnYearly = dialogView.findViewById(R.id.radio_btn_yearly);
 
+
+        final TextView[] contextCircles = {homeContext, workContext, schoolContext, errandsContext};
+
+        for (TextView contextView : contextCircles) {
+            contextView.setOnClickListener(v -> {
+                TextView chosen = (TextView) v;
+                updateContextSelection(chosen , contextCircles);
+            });
+        }
 
         // Setup the spinner with frequencies
         ArrayAdapter<CharSequence> adapterDay = ArrayAdapter.createFromResource(this,
@@ -197,11 +217,6 @@ public class MainActivity extends AppCompatActivity {
                 R.array.recur_frequencies, android.R.layout.simple_spinner_item);
         adapterRecur.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinFreq.setAdapter(adapterRecur);
-
-        ArrayAdapter<CharSequence> adapterContext = ArrayAdapter.createFromResource(this,
-                R.array.contexts, android.R.layout.simple_spinner_item);
-        adapterContext.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinContext.setAdapter(adapterContext);
 
         final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
         final String formattedToday = sdf.format(today.getTime());
@@ -261,6 +276,8 @@ public class MainActivity extends AppCompatActivity {
             rb.setChecked(true);
         };
 
+
+
         radioBtnOneTime.setOnClickListener(radioButtonClickListener);
         radioBtnDaily.setOnClickListener(radioButtonClickListener);
         radioBtnWeekly.setOnClickListener(radioButtonClickListener);
@@ -274,8 +291,7 @@ public class MainActivity extends AppCompatActivity {
             final String goalText = editTextGoal.getText().toString().trim();
             Integer freqMonth = -1, freqOccur = -1;
             long freqTimeInMilli = calendar.getTimeInMillis();
-            String freqType = "", freqDayString = "";
-            final String selectedContext = spinContext.getSelectedItem().toString();
+            String freqType = "", freqDayString = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
 
             if (radioBtnOneTime.isChecked()) {
                 freqType = freqTypes[0];
@@ -295,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
                 freqType = freqTypes[4];
             }
 
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, freqDayString, currListCategory, freqTimeInMilli, freqOccur, freqMonth);
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, currListCategory, freqDayString, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -312,7 +328,6 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please check a goal frequency.", Toast.LENGTH_SHORT).show());
             } else if (findSameGoal != null) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
-
             } else if (startTime < currentTime && !radioBtnYearly.isChecked()) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a valid time.", Toast.LENGTH_SHORT).show());
             }
@@ -325,23 +340,28 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-
-
     //HELPER FUNCTIONS
 
     private void updateNoGoalsVisibility(int numberOfGoals) {
-        if (numberOfGoals == 0) {
+        if (numberOfGoals == 0 && currListCategory == "Today") {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
         }
     }
 
+    // Update the TextView with the current date
     private void updateDate() {
-        String currentDate = dateFormat.format(today.getTime());
-
-        // Update the TextView with the current date
-        dateTextView.setText(currentDate);
+        switch(currListCategory) {
+            case "Today":   dateTextView.setText("Today: " + dateFormat.format(today.getTime()));
+                break;
+            case "Tomorrow":    dateTextView.setText("Tomorrow: " + dateFormat.format(tomorrow.getTime()));
+                break;
+            case "Pending": dateTextView.setText("Pending");
+                break;
+            case "Recurring": dateTextView.setText("Recurring");
+                break;
+        }
     }
 
     private boolean isCorrectMonthlyOccurrence(GoalEntity goal) {
@@ -352,7 +372,6 @@ public class MainActivity extends AppCompatActivity {
         int dayOfMonth = today.get(Calendar.DAY_OF_MONTH);
         int occurrence = ((dayOfMonth - 1) / 7) + 1;
 
-        int goalMonth = goal.getFreqMonth();
         int todayMonth = today.get(Calendar.MONTH) + 1;
         int todayLastMonth = todayMonth - 1;
 
@@ -460,13 +479,6 @@ public class MainActivity extends AppCompatActivity {
         filterChanges();
     }
 
-    private String getTomorrowDate() {
-        today.add(Calendar.DAY_OF_YEAR, 1); // add one day to get tmrw date
-
-        // i used the same pattern as seen before
-        return dateFormat.format(today.getTime());
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.dropdown_menu, menu);
@@ -486,29 +498,39 @@ public class MainActivity extends AppCompatActivity {
                     String selectedOption = menuItem.getTitle().toString();
                     currListCategory = selectedOption;
 
-                    switch (selectedOption) {
-                        case "Today":
-                            dateTextView.setText(todayDate);
-                            break;
-                        case "Tomorrow":
-                            dateTextView.setText(tomorrowDate);
-                            break;
-                        case "Pending":
-                            dateTextView.setText("Pending");
-                            break;
-                        case "Recurring":
-                            dateTextView.setText("Recurring");
-                            break;
-                    }
+                    updateDate();
                     filterChanges();
                     return true;
                 }
             });
-
             popupMenu.show();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    //Make selected context circle in add dialog appear chosen and others not
+    private void updateContextSelection(TextView selected, TextView[] contextCircles) {
+        // Iterate over all context TextViews
+        for (TextView contextView : contextCircles) {
+            if (contextView == selected) {
+                // Apply the drawable to the selected TextView
+                contextView.setForeground(ContextCompat.getDrawable(this, R.drawable.chosen_context));
+            } else {
+                // Remove the background from all other TextViews
+                contextView.setForeground(null); // Or set to a default background if necessary
+            }
+        }
+    }
+
+    private TextView getSelectedContext(TextView[] contextCircles) {
+        TextView chosen = null;
+        for (TextView contextView : contextCircles) {
+            if (contextView.getForeground() != null) {
+                chosen = contextView;
+            }
+        }
+        return chosen;
     }
 }
 

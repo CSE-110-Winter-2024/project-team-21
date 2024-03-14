@@ -12,12 +12,14 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Collections;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
@@ -37,7 +39,27 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     }
 
     public void updateGoals(List<GoalEntity> newGoals) {
-        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
+        Map<String, Integer> contextOrder = Map.of(
+                "Home", 1,
+                "Work", 2,
+                "School", 3,
+                "Errands", 4
+        );
+
+        // Custom sort: First by isChecked status, then by context order
+        Collections.sort(newGoals, (o1, o2) -> {
+            // First compare by isChecked status
+            int checkedCompare = Boolean.compare(o1.isChecked(), o2.isChecked());
+            if (checkedCompare == 0) {
+                // If isChecked status is the same, sort by context
+                return Integer.compare(
+                        contextOrder.getOrDefault(o1.getContext(), 5),
+                        contextOrder.getOrDefault(o2.getContext(), 5)
+                );
+            }
+            return checkedCompare;
+        });
+
         this.goalsList = newGoals;
         notifyDataSetChanged();
     }
@@ -58,11 +80,17 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         holder.goalCheckBox.setChecked(goal.isChecked());
 
         String context = goal.getContext();
-        if (context != null && !context.isEmpty()) {
-            holder.contextTextView.setText(context);
-            holder.contextTextView.setVisibility(View.VISIBLE);
-        } else {
-            holder.contextTextView.setVisibility(View.GONE);
+        holder.contextTextView.setText(context.substring(0,1));
+
+        switch(context) {
+            case "Home": holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_home));
+                break;
+            case "Work": holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_work));
+                break;
+            case "School":holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_school));
+                break;
+            case "Errands":holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_errands));
+                break;
         }
 
         //fixed issue if goalEntity would not be found aka null
