@@ -19,6 +19,7 @@ import android.widget.TextView;
 import androidx.room.Room;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
 
     private List<RadioButton> radioButtons;
 
+    // Fields to manage focus mode
+    private boolean inFocusMode = false;
+    private String focusContext = null;
     //constants
     final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
 
@@ -72,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     String allFormattedToday;
 
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    final String[] freqTypes = {"One-time","Daily","Weekly","Monthly","Yearly"};
+    final String[] freqTypes = getResources().getStringArray(R.array.goal_frequencies);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,6 +183,43 @@ public class MainActivity extends AppCompatActivity {
             adapter.updateGoals(filteredGoals);
             updateNoGoalsVisibility(shownGoalsCount);
         });
+    }
+
+    // method for when the focus mode button is clicked
+    public void toggleFocusMode(View view) {
+        final String[] contexts = getContexts().toArray(new String[0]);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Focus Context")
+                .setItems(contexts, (dialog, which) -> {
+                    // Apply the focus mode with the selected context
+                    focusContext = contexts[which];
+                    inFocusMode = true;
+                    // Use the LiveData observer pattern
+                    goalDao.getAllGoals().observe(this, this::filterGoalsByContext);
+                })
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Clear Focus", (dialog, which) -> clearFocusMode());
+        builder.create().show();
+    }
+
+    private void filterGoalsByContext(List<GoalEntity> goals) {
+        if (inFocusMode && focusContext != null) {
+            // If not null, proceed with filtering
+            List<GoalEntity> filteredGoals = goals.stream()
+                    .filter(goal -> goal.getContext().equals(focusContext))
+                    .collect(Collectors.toList());
+            adapter.setGoalsList(filteredGoals);
+        } else {
+            // If not in focus mode or focus context is null, show all goals
+            adapter.setGoalsList(goals);
+        }
+    }
+
+    private void clearFocusMode() {
+        inFocusMode = false;
+        focusContext = null;
+        // Reset to observe all goals without filtering
+        goalDao.getAllGoals().observe(this, adapter::setGoalsList);
     }
 
     private void showAddGoalDialog() {
@@ -288,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
             final String goalText = editTextGoal.getText().toString().trim();
             Integer freqMonth = -1, freqOccur = -1;
             long freqTimeInMilli = calendar.getTimeInMillis();
-            String freqType = "", freqDayString = "";
+            String freqType = "", freqDayString = "", context = "";
             if (radioBtnOneTime.isChecked()) {
                 freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
@@ -307,7 +348,7 @@ public class MainActivity extends AppCompatActivity {
                 freqType = freqTypes[4];
             }
 
-            GoalEntity complete = new GoalEntity(goalText, false, freqType, freqDayString, freqMonth, freqTimeInMilli, freqOccur);
+            GoalEntity complete = new GoalEntity(goalText, false, context, freqType, freqDayString,freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -339,6 +380,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    //HELPER FUNCTIONS
 
     private void updateNoGoalsVisibility(int numberOfGoals) {
         if (numberOfGoals == 0) {
@@ -425,5 +467,15 @@ public class MainActivity extends AppCompatActivity {
                 rb.setChecked(false);
             }
         }
+    }
+
+    private void filterChanges() {
+
+    }
+
+    // Helper method to provide context options for the spinner
+    private List<String> getContexts() {
+        // Define the list of contexts to choose from
+        return Arrays.asList("Home", "Work", "School", "Errands");
     }
 }

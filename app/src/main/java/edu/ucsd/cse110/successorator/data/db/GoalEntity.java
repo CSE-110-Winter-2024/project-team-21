@@ -38,6 +38,10 @@ public class GoalEntity {
     @ColumnInfo(name = "freqTimeInMilli")
     private long freqTimeInMilli;
 
+    // New field for context
+    @ColumnInfo(name = "context")
+    private String context;
+
     public void setId(Integer id) { this.id = id; }
 
     public void setGoalText(String goalText) {
@@ -91,7 +95,15 @@ public class GoalEntity {
         return freqTimeInMilli;
     }
 
-    public GoalEntity(String goalText, boolean isChecked, String frequencyType, String freqDayString, Integer freqMonth, long freqTimeInMilli, Integer freqOccur) {
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
+
+    public GoalEntity(String goalText, boolean isChecked, String context, String frequencyType, String freqDayString, long freqTimeInMilli, Integer freqOccur, Integer freqMonth) {
         this.goalText = goalText;
         this.isChecked = isChecked;
         this.frequencyType = frequencyType;
