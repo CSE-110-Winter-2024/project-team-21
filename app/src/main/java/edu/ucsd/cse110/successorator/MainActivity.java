@@ -62,8 +62,6 @@ public class MainActivity extends AppCompatActivity {
     // Fields to manage focus mode
     private boolean inFocusMode = false;
     private String focusContext = "";
-    //constants
-    final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
 
     private int shownGoalsCount;
     private TextView contextTextView; // Spinner for selecting context
@@ -75,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Calendar tomorrow;
 
-
+    final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
 
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     final String[] freqTypes = {"One-time","Daily", "Weekly", "Monthly", "Yearly"};
@@ -118,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         tomorrow = (Calendar) today.clone();
         tomorrow.add(Calendar.DAY_OF_MONTH, 1);
 
-        allFormattedToday = dateFormat.format(today.getTime());
+        allFormattedToday = "Today: " + dateFormat.format(today.getTime());
         currListCategory = "Today";
 
         filterChanges();
@@ -131,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         // Forward button listener to advance the day
         forwardButton.setOnClickListener(v -> {
             advanceTimeByOneDay();
-            updateNoGoalsVisibility(shownGoalsCount);
+            updateNoGoalsVisibility();
         });
     }
 
@@ -292,26 +290,30 @@ public class MainActivity extends AppCompatActivity {
             Integer freqMonth = -1, freqOccur = -1;
             long freqTimeInMilli = calendar.getTimeInMillis();
             String freqType = "", freqDayString = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
-
+            String listCategory = currListCategory;
             if (radioBtnOneTime.isChecked()) {
                 freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
                 freqType = freqTypes[1];
                 freqDayString = daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1];
                 freqTimeInMilli = calendar.getTimeInMillis();
+                listCategory = "Recurring";
             } else if (radioBtnWeekly.isChecked()) {
                 freqType = freqTypes[2];
                 freqDayString = spinWeek.getSelectedItem().toString();
+                listCategory = "Recurring";
             } else if (radioBtnMonthly.isChecked()) {
                 freqType = freqTypes[3];
                 freqMonth = Calendar.MONTH +1;
                 freqOccur = Integer.valueOf(spinFreq.getSelectedItem().toString().substring(0,1));
                 freqDayString = spinDay.getSelectedItem().toString();
+                listCategory = "Recurring";
             } else if (radioBtnYearly.isChecked()) {
                 freqType = freqTypes[4];
+                listCategory = "Recurring";
             }
 
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, currListCategory, freqDayString, freqTimeInMilli, freqOccur, freqMonth);
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, listCategory, freqDayString, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -342,8 +344,8 @@ public class MainActivity extends AppCompatActivity {
 
     //HELPER FUNCTIONS
 
-    private void updateNoGoalsVisibility(int numberOfGoals) {
-        if (numberOfGoals == 0 && currListCategory == "Today") {
+    private void updateNoGoalsVisibility() {
+        if (shownGoalsCount == 0 && dateTextView.getText().toString().equals(allFormattedToday)) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
@@ -359,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case "Pending": dateTextView.setText("Pending");
                 break;
-            case "Recurring": dateTextView.setText("Recurring");
+            case "Recurring":   dateTextView.setText("Recurring");
                 break;
         }
     }
@@ -437,14 +439,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void filterChanges() {
         final List<GoalEntity>[] filteredGoals = new List[]{new ArrayList<>()};
-        goalDao.getGoalsByListCategory(currListCategory).observe(this, goalEntities -> {
+        goalDao.getAllGoals().observe(this, goalEntities -> {
             filteredGoals[0] = goalEntities.stream().filter(goal ->
                             goal.getFrequencyType().equals(freqTypes[0])
                                     || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
                                     || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
                                     || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
-                                    || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
+                                    || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal))
+                                    || (goal.getListCategory().equals(currListCategory)))
                             .collect(Collectors.toList());
+            //temporary fix for handling tomorrow and pending
+            if (currListCategory == "Tomorrow") {
+                filteredGoals[0] = filteredGoals[0].stream()
+                        .filter(goal -> isItTomorrow(goal))
+                        .collect(Collectors.toList());
+            }
             if (inFocusMode) {
                 filteredGoals[0] = filteredGoals[0].stream()
                             .filter(goal -> goal.getContext().equals(focusContext))
@@ -452,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
             }
             shownGoalsCount = filteredGoals[0].size();
             adapter.updateGoals(filteredGoals[0]);
-            updateNoGoalsVisibility(shownGoalsCount);
+            updateNoGoalsVisibility();
         });
     }
 
@@ -477,6 +486,7 @@ public class MainActivity extends AppCompatActivity {
         focusContext = "N/A";
         // Reset to observe all goals without filtering
         filterChanges();
+        updateNoGoalsVisibility();
     }
 
     @Override
@@ -492,16 +502,13 @@ public class MainActivity extends AppCompatActivity {
             PopupMenu popupMenu = new PopupMenu(this, findViewById(R.id.dropdown_menu));
             popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
 
-            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    String selectedOption = menuItem.getTitle().toString();
-                    currListCategory = selectedOption;
-
-                    updateDate();
-                    filterChanges();
-                    return true;
-                }
+            popupMenu.setOnMenuItemClickListener(menuItem -> {
+                String selectedOption = menuItem.getTitle().toString();
+                currListCategory = selectedOption;
+                updateDate();
+                filterChanges();
+                updateNoGoalsVisibility();
+                return true;
             });
             popupMenu.show();
             return true;
@@ -531,6 +538,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return chosen;
+    }
+
+    private boolean isItTomorrow(GoalEntity goal) {
+        String tomorrowDate = dateFormat.format(goal.getFreqTimeInMilli());
+        System.out.println("***"+tomorrowDate+"*"+dateTextView.getText().toString().substring(10)+"***");
+        if (tomorrowDate.equals(dateTextView.getText().toString().substring(10))) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }
 

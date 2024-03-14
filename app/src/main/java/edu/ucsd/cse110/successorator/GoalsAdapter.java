@@ -112,7 +112,9 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         holder.goalCheckBox.setOnClickListener(v -> {
             boolean checked = holder.goalCheckBox.isChecked();
             goalEntity.setChecked(checked);
-
+            if (goalEntity.getListCategory().equals("Tomorrow") || goalEntity.getListCategory().equals("Today")) {
+                goalEntity.setListCategory("Today");
+            }
             goalDao.update(goalEntity);
             notifyDataSetChanged();
         });
@@ -121,33 +123,32 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         holder.goalTextView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                String selectedGoalText = holder.goalTextView.getText().toString();
                 GoalEntity clickedGoal = goalsList.get(holder.getAdapterPosition());
-                GoalEntity alsoClicked = goalDao.findByGoalText(selectedGoalText);
-                int clickedGoalId = clickedGoal.getId();
 
                 PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
-                popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
 
-                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch(item.getTitle().toString()) {
-                            case "Today":
-                                updateListCategory(clickedGoal, "Today");
-                                return true;
-                            case "Tomorrow":
-                                updateListCategory(clickedGoal, "Tomorrow");
-                                return true;
-                            case "Pending":
-                                updateListCategory(clickedGoal, "Pending");
-                                return true;
-                            case "Recurring":
-                                updateListCategory(clickedGoal, "Recurring");
-                                return true;
-                        }
-                        return false;
+                popupMenu.getMenuInflater().inflate(R.menu.popup_pending_menu, popupMenu.getMenu());
+
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    switch(item.getTitle().toString()) {
+                        case "Move to Today":
+                            updateListCategory(clickedGoal, "Today");
+                            return true;
+                        case "Move to Tomorrow":
+                            updateListCategory(clickedGoal, "Tomorrow");
+                            return true;
+                        case "Finish":
+                            clickedGoal.setChecked(true);
+                            clickedGoal.setListCategory("Today");
+                            goalDao.update(clickedGoal);
+                            notifyDataSetChanged();
+                            return true;
+                        case "Delete":
+                            goalDao.delete(clickedGoal);
+                            notifyDataSetChanged();
+                            return true;
                     }
+                    return false;
                 });
                 popupMenu.show();
                 return true;
