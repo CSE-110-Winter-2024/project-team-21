@@ -3,16 +3,19 @@ package edu.ucsd.cse110.successorator.data.db;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import java.util.Objects;
 
+import edu.ucsd.cse110.successorator.*;
+
 @Entity(tableName = "goals")
 public class GoalEntity {
+
     @PrimaryKey(autoGenerate = true)
-    @NonNull
     @ColumnInfo(name = "id")
-    private Integer id;
+    private Integer id = null;
 
     @ColumnInfo(name = "goalText")
     private String goalText;
@@ -20,40 +23,76 @@ public class GoalEntity {
     @ColumnInfo(name = "isChecked")
     private boolean isChecked;
 
+    @ColumnInfo(name = "frequencyType")
+    private String frequencyType;
+
+    @ColumnInfo(name = "freqMonth")
+    private Integer freqMonth;
+
+    @ColumnInfo(name = "freqDayString")
+    private String freqDayString;
+
+    @ColumnInfo(name = "freqOccur")
+    private Integer freqOccur;
+
+    @ColumnInfo(name = "freqTimeInMilli")
+    private long freqTimeInMilli;
+
     // New field for context
     @ColumnInfo(name = "context")
     private String context;
 
-    // Constructor
-    public GoalEntity(String goalText, boolean isChecked) {
+    public void setId(Integer id) { this.id = id; }
+
+    public void setGoalText(String goalText) {
         this.goalText = goalText;
-        this.isChecked = isChecked;
-        this.context = ""; // Default empty context
     }
 
-    // Getters and setters
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
+
+    public void setFreqMonth(Integer freqMonth) {
+        this.freqMonth = freqMonth;
+    }
+
+    public void setFrequencyType(String frequencyType) {
+        this.frequencyType = frequencyType;
+    }
+
+    public void setFreqDayString(String freqDayString) {
+        this.freqDayString = freqDayString;
+    }
+    public void setFreqOccur(Integer freqOccur) { this.freqOccur = freqOccur; }
+    public void setFreqTimeInMilli(long freqTimeInMilli) { this.freqTimeInMilli = freqTimeInMilli; }
+
+
     public Integer getId() {
         return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getGoalText() {
         return goalText;
     }
 
-    public void setGoalText(String goalText) {
-        this.goalText = goalText;
-    }
-
     public boolean isChecked() {
         return isChecked;
     }
 
-    public void setChecked(boolean checked) {
-        isChecked = checked;
+    public String getFreqDayString() { return freqDayString; }
+
+    public Integer getFreqMonth() {
+        return freqMonth;
+    }
+
+    public String getFrequencyType() {
+        return frequencyType;
+    }
+    public Integer getFreqOccur() {
+        return freqOccur;
+    }
+    public long getFreqTimeInMilli() {
+        return freqTimeInMilli;
     }
 
     public String getContext() {
@@ -64,20 +103,26 @@ public class GoalEntity {
         this.context = context;
     }
 
-    // Equals and hashCode methods
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GoalEntity)) return false;
-        GoalEntity that = (GoalEntity) o;
-        return isChecked == that.isChecked &&
-                id.equals(that.id) &&
-                goalText.equals(that.goalText) &&
-                Objects.equals(context, that.context);
+    public GoalEntity(String goalText, boolean isChecked, String context, String frequencyType, String freqDayString, long freqTimeInMilli, Integer freqOccur, Integer freqMonth) {
+        this.goalText = goalText;
+        this.isChecked = isChecked;
+        this.context = context;
+        this.frequencyType = frequencyType;
+        this.freqDayString = freqDayString;
+        this.freqTimeInMilli = freqTimeInMilli;
+        this.freqOccur = freqOccur;
+        this.freqMonth = freqMonth;
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GoalEntity goal = (GoalEntity) o;
+        return Objects.equals(goalText, goal.goalText) && Objects.equals(isChecked, goal.isChecked) ;
+    }
+    @Override
     public int hashCode() {
-        return Objects.hash(id, goalText, isChecked, context);
+        return Objects.hash(goalText, isChecked);
     }
 }

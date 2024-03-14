@@ -35,29 +35,16 @@ import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.CoreMatchers.not;
 
 import static org.hamcrest.Matchers.allOf;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-
-import android.content.Context;
-import android.content.res.Resources;
 
 import android.graphics.Paint;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.lifecycle.Lifecycle;
-import androidx.test.core.app.ActivityScenario;
-
-import org.junit.Assert;
 import org.junit.runners.MethodSorters;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-
-import edu.ucsd.cse110.successorator.data.db.AppDatabase;
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -67,7 +54,6 @@ import edu.ucsd.cse110.successorator.databinding.ActivityMainBinding;
 @RunWith(AndroidJUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MainActivityTest {
-
     @Rule
     public ActivityScenarioRule<MainActivity> activityRule =
             new ActivityScenarioRule<>(MainActivity.class);
@@ -136,6 +122,40 @@ public class MainActivityTest {
                 }
             }
         };
+    }
+
+    public void addGoals(){
+        //Add "School" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Write Paper"), ViewActions.closeSoftKeyboard());
+        onView(withText("Home")).perform(click());
+        onView(withText("School"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //Add "Work" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Email Boss"), ViewActions.closeSoftKeyboard());
+        onView(withText("Home")).perform(click());
+        onView(withText("Work"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //Add "Errands" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Clean"), ViewActions.closeSoftKeyboard());
+        onView(withText("Home")).perform(click());
+        onView(withText("Errands"))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(click());
+        onView(withText("Add")).perform(click());
+
+        //Add "Home" Goal
+        onView(withId(R.id.add_goal_button)).perform(click());
+        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Read"), ViewActions.closeSoftKeyboard());
+        onView(withText("Add")).perform(click());
     }
 
     //"No goals for the day" should be displayed if no goals are shown
@@ -319,41 +339,8 @@ public class MainActivityTest {
     }
 
     //Helper method for US5 to add Goals
-    public void addGoals(){
-        //Add "School" Goal
-        onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Write Paper"), ViewActions.closeSoftKeyboard());
-        onView(withText("Home")).perform(click());
-        onView(withText("School"))
-                .inRoot(RootMatchers.isPlatformPopup())
-                .perform(click());
-        onView(withText("Add")).perform(click());
-
-        //Add "Work" Goal
-        onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Email Boss"), ViewActions.closeSoftKeyboard());
-        onView(withText("Home")).perform(click());
-        onView(withText("Work"))
-                .inRoot(RootMatchers.isPlatformPopup())
-                .perform(click());
-        onView(withText("Add")).perform(click());
-
-        //Add "Errands" Goal
-        onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Clean"), ViewActions.closeSoftKeyboard());
-        onView(withText("Home")).perform(click());
-        onView(withText("Errands"))
-                .inRoot(RootMatchers.isPlatformPopup())
-                .perform(click());
-        onView(withText("Add")).perform(click());
-
-        //Add "Home" Goal
-        onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Read"), ViewActions.closeSoftKeyboard());
-        onView(withText("Add")).perform(click());
-    }
     @Test
-    public void US5_FiltersWork() {
+    public void test10_US5_FiltersWork() {
         addGoals();
         //Focus Mode
         onView(withId(R.id.btn_focus_mode)).perform(click());
@@ -383,7 +370,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void US5_FiltersChange() {
+    public void test_10_US5_FiltersChange() {
         addGoals();
         //Focus Mode for Work
         onView(withId(R.id.btn_focus_mode)).perform(click());
@@ -438,8 +425,9 @@ public class MainActivityTest {
         onView(isRoot()).perform(waitFor(5000)); //we can see it for a bit
 
     }
+
     @Test
-    public void US5_ClearFocus() {
+    public void test_10_US5_ClearFocus() {
         addGoals();
         //Focus Mode for Work
         onView(withId(R.id.btn_focus_mode)).perform(click());
@@ -470,9 +458,10 @@ public class MainActivityTest {
         onView(withText("Clear Focus")).perform(click());
 
         //Everything Appears
+    }
 
     @Test
-    public void test8_US4_AddGoalWithSpecificContext() {
+    public void test11_US4_AddGoalWithSpecificContext() {
         final String goalText = "Draft research paper";
         final String contextTag = "School";
 
@@ -492,7 +481,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void test9_US4_AddGoalNoSpecificContext() {
+    public void test12_US4_AddGoalNoSpecificContext() {
         final String goalText = "Draft research paper";
         onView(withId(R.id.add_goal_button)).perform(click());
         onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText));
@@ -501,9 +490,11 @@ public class MainActivityTest {
                 .perform(RecyclerViewActions.scrollTo(hasDescendant(withText(goalText))));
         onView(withId(R.id.goals_recycler_view))
                 .check(matches(hasDescendant(withChild(withText("Home")))));
+
     }
+
     @Test
-    public void test10_US4_AddTwoGoalsWithSpecificContext() {
+    public void test13_US4_AddTwoGoalsWithSpecificContext() {
         //add goal 1
         onView(withId(R.id.add_goal_button)).perform(click());
         onView(withId(R.id.edit_text_goal_id)).perform(typeText("Draft Research"));
@@ -536,5 +527,4 @@ public class MainActivityTest {
         onView(withId(R.id.goals_recycler_view))
                 .check(matches(hasDescendant(withChild(withText("Work")))));
     }
-
 }

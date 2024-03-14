@@ -29,8 +29,11 @@ public interface GoalDao {
     @Query("SELECT * FROM goals LIMIT 1")
     GoalEntity isItEmpty();
 
-    @Query("DELETE FROM goals WHERE isChecked = 1")
+    @Query("DELETE FROM goals WHERE isChecked = 1 AND frequencyType = 'One-time' ")
     void removeCompletedFromDao();
+
+    @Query("UPDATE goals SET isChecked = 0 WHERE isChecked = 1 AND frequencyType != 'One-time'")
+    void uncheckRecurringGoals();
 
     @Query("SELECT * FROM goals")
     LiveData<GoalEntity> getGoals();
