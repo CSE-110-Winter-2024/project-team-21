@@ -27,12 +27,4 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <!-- New TextView for context -->
-    <TextView
-        android:id="@+id/context_text_view"
-        android:layout_width="96dp"
-        android:layout_height="61dp"
-        android:layout_marginEnd="16dp"
-        android:textSize="16sp"
-        android:visibility="gone" />
 </LinearLayout>
