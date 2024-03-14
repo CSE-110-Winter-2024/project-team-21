@@ -128,7 +128,7 @@ public class MainActivityTest {
     public void addGoals(){
         //Add "School" Goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Write Paper"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Write Paper"), ViewActions.closeSoftKeyboard());
         onView(withText("Home")).perform(click());
         onView(withText("School"))
                 .inRoot(RootMatchers.isPlatformPopup())
@@ -137,7 +137,7 @@ public class MainActivityTest {
 
         //Add "Work" Goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Email Boss"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Email Boss"), ViewActions.closeSoftKeyboard());
         onView(withText("Home")).perform(click());
         onView(withText("Work"))
                 .inRoot(RootMatchers.isPlatformPopup())
@@ -146,7 +146,7 @@ public class MainActivityTest {
 
         //Add "Errands" Goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Clean"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Clean"), ViewActions.closeSoftKeyboard());
         onView(withText("Home")).perform(click());
         onView(withText("Errands"))
                 .inRoot(RootMatchers.isPlatformPopup())
@@ -155,7 +155,7 @@ public class MainActivityTest {
 
         //Add "Home" Goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Read"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Read"), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
     }
 
@@ -164,7 +164,7 @@ public class MainActivityTest {
     public void test1_goalAdditionCancelled_NoGoalsTextStillDisplayed() {
         onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("New Goal"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("New Goal"), ViewActions.closeSoftKeyboard());
         onView(withText("Cancel")).perform(click());
         onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
     }
@@ -174,7 +174,7 @@ public class MainActivityTest {
     public void test2_noGoalsText_VisibilityChangesAfterAddingGoal() {
         onView(withId(R.id.no_goals_text)).check(matches(isDisplayed()));
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         onView(withId(R.id.no_goals_text)).check(matches(not(isDisplayed())));
     }
@@ -202,7 +202,7 @@ public class MainActivityTest {
             }
         });
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Test Goal"), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         onView(withId(R.id.goals_recycler_view)).check(new ViewAssertion() {
             @Override
@@ -221,7 +221,7 @@ public class MainActivityTest {
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         //Click the checkbox of goal
@@ -259,14 +259,14 @@ public class MainActivityTest {
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         Thread.sleep(1000);
@@ -281,7 +281,7 @@ public class MainActivityTest {
         onView(withText(goalText2)).check(matches(withText(goalText2)));
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 
@@ -309,12 +309,12 @@ public class MainActivityTest {
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         //Add a goal
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText2), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
 
         Thread.sleep(1000);
@@ -467,7 +467,7 @@ public class MainActivityTest {
         final String contextTag = "School";
 
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText));
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText));
 
         onView(withText("Home")).perform(click());
 
@@ -485,7 +485,7 @@ public class MainActivityTest {
     public void test12_US4_AddGoalNoSpecificContext() {
         final String goalText = "Draft research paper";
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText));
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText));
         onView(withText("Add")).perform(click());
         onView(withId(R.id.goals_recycler_view))
                 .perform(RecyclerViewActions.scrollTo(hasDescendant(withText(goalText))));
@@ -498,7 +498,7 @@ public class MainActivityTest {
     public void test13_US4_AddTwoGoalsWithSpecificContext() {
         //add goal 1
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Draft Research"));
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Draft Research"));
 
         onView(withText("Home")).perform(click());
 
@@ -509,7 +509,7 @@ public class MainActivityTest {
 
         //add goal 2
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText("Email Boss"));
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText("Email Boss"));
 
         onView(withText("Home")).perform(click());
 
@@ -534,7 +534,7 @@ public class MainActivityTest {
         final String newGoalText = "New Test Goal";
 
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(newGoalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(newGoalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 
@@ -557,7 +557,7 @@ public class MainActivityTest {
         final String goalText = "Goal for Tomorrow Option Test";
 
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000); // Let the UI update
 
@@ -571,7 +571,7 @@ public class MainActivityTest {
         final String goalText = "Goal to Move to Tomorrow";
 
         onView(withId(R.id.add_goal_button)).perform(click());
-        onView(withId(R.id.edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
+        onView(withId(R.id.text_pending_edit_text_goal_id)).perform(typeText(goalText), ViewActions.closeSoftKeyboard());
         onView(withText("Add")).perform(click());
         Thread.sleep(1000);
 

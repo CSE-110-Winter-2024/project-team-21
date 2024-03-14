@@ -8,34 +8,35 @@
     android:padding="16dp">
 
     <EditText
-        android:id="@+id/edit_text_goal_id"
+        android:id="@+id/text_pending_edit_text_goal_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
         android:hint="Enter goal"
         android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="260dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.51"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+        app:layout_constraintTop_toBottomOf="@+id/btn_selectDate">
 
         <RadioGroup
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="2"
+            android:layout_weight="4"
             android:orientation="vertical">
 
             <LinearLayout
@@ -98,47 +99,37 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"
+            android:layout_weight="4"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btn_daily"
+
+            <TextView
+                android:id="@+id/text_recur_daily"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="Select Date For Goal" />
+                android:gravity="center" />
 
-            <Spinner
-                android:id="@+id/spin_weekly"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/text_recur_weekly"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="horizontal">
+                android:gravity="center" />
 
-                <Spinner
-                    android:id="@+id/spin_recurring"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="4" />
-
-                <Spinner
-                    android:id="@+id/spin_day"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="5" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/button_select_start_date"
+            <TextView
+                android:id="@+id/text_recur_monthly"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="Select Start Date" />
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/text_recur_yearly"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center" />
         </LinearLayout>
     </LinearLayout>
 
@@ -150,11 +141,10 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@id/linearLayout"
+        app:layout_constraintBottom_toTopOf="@+id/text_starting"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edit_text_goal_id"
-        app:layout_constraintVertical_bias="0.49">
+        app:layout_constraintTop_toBottomOf="@+id/text_pending_edit_text_goal_id">
 
         <TextView
             android:id="@+id/homeContext"
@@ -235,14 +225,27 @@
         android:id="@+id/btn_selectDate"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
         android:layout_weight="1"
         android:text="Select Start Date"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/linearLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
+
+    <TextView
+        android:id="@+id/text_starting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:textSize="18dp"
+        android:textColor="@color/black"
+        android:text="Starting on:"
+        app:layout_constraintBottom_toTopOf="@+id/btn_selectDate"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -190,7 +190,11 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
     private void updateListCategory(GoalEntity goal, String category) {
         goal.setListCategory(category);
         goalDao.update(goal);
-        goalsList.remove(goal);
+        notifyDataSetChanged();
+    }
+
+    public void rolloverTomorrowToToday() {
+        goalDao.rolloverTomorrowToToday();
         notifyDataSetChanged();
     }
 }

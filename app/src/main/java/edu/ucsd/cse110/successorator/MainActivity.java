@@ -22,7 +22,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import java.text.ParseException;
@@ -64,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private String focusContext = "";
 
     private int shownGoalsCount;
-    private TextView contextTextView; // Spinner for selecting context
     Calendar today;
 
     String allFormattedToday;
@@ -83,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             "S", "School",
             "E", "Errands"
     );
+    final String[] occurrences = {"1st", "2nd", "3rd", "4th", "5th"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +116,9 @@ public class MainActivity extends AppCompatActivity {
         updateDate();
 
         // Set OnClickListener for FloatingActionButton to add new goals
-        addGoalButton.setOnClickListener(v -> showAddGoalDialog());
+        addGoalButton.setOnClickListener(v ->
+                showAddGoalDialogGeneral()
+        );
 
         // Forward button listener to advance the day
         forwardButton.setOnClickListener(v -> {
@@ -152,6 +153,23 @@ public class MainActivity extends AppCompatActivity {
             popupMenu.setOnMenuItemClickListener(menuItem -> {
                 String selectedOption = menuItem.getTitle().toString();
                 currListCategory = selectedOption;
+                switch(currListCategory) {
+                    case "Today":
+                    case "Tomorrow": addGoalButton.setOnClickListener(v ->
+                            showAddGoalDialogGeneral()
+                    );
+                        break;
+                    case "Pending": addGoalButton.setOnClickListener(v ->
+                            showAddGoalDialogPending()
+                    );
+                        break;
+                    case "Recurring": addGoalButton.setOnClickListener(v ->
+                            showAddGoalDialogRecurring()
+                    );
+                        break;
+                }
+                // Set OnClickListener for FloatingActionButton to add new goals
+
                 updateDate();
                 filterChanges();
                 updateNoGoalsVisibility();
@@ -184,33 +202,30 @@ public class MainActivity extends AppCompatActivity {
 
         // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
-
         // Switch goals marked 'Tomorrow' which are not checked off to 'Today' view
-        goalDao.rolloverTomorrowToToday();
+        adapter.rolloverTomorrowToToday();
         filterChanges();
     }
 
-    private void showAddGoalDialog() {
+    //Today or Tomorrow Add Dialog
+    private void showAddGoalDialogGeneral() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Goal");
 
         // Inflate the custom layout
         LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_goal, null);
+        View dialogView = inflater.inflate(R.layout.dialog_add_todaytmr, null);
         builder.setView(dialogView);
 
         //initialize components of add dialog
-        final EditText editTextGoal = dialogView.findViewById(R.id.edit_text_goal_id);
-        final Spinner spinDay = dialogView.findViewById(R.id.spin_day);
-        final Spinner spinFreq = dialogView.findViewById(R.id.spin_recurring);
-        final Spinner spinWeek = dialogView.findViewById(R.id.spin_weekly);
+        final EditText editTextGoal = dialogView.findViewById(R.id.text_pending_edit_text_goal_id);
         final TextView homeContext = dialogView.findViewById(R.id.homeContext);
         final TextView workContext = dialogView.findViewById(R.id.workContext);
         final TextView schoolContext = dialogView.findViewById(R.id.schoolContext);
         final TextView errandsContext = dialogView.findViewById(R.id.errandsContext);
-        final Button yearlyButton = dialogView.findViewById(R.id.button_select_start_date);
-        final Button oneTimeButton = dialogView.findViewById(R.id.btn_onetime);
-        final Button dailyButton = dialogView.findViewById(R.id.btn_daily);
+        final TextView textWeekly = dialogView.findViewById(R.id.text_today_weekly);
+        final TextView textMonthly = dialogView.findViewById(R.id.text_today_monthly);
+        final TextView textYearly = dialogView.findViewById(R.id.text_today_yearly);
         final RadioButton radioBtnOneTime = dialogView.findViewById(R.id.radio_btn_onetime);
         final RadioButton radioBtnDaily = dialogView.findViewById(R.id.radio_btn_daily);
         final RadioButton radioBtnWeekly = dialogView.findViewById(R.id.radio_btn_weekly);
@@ -227,79 +242,23 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Setup the spinner with frequencies
-        ArrayAdapter<CharSequence> adapterDay = ArrayAdapter.createFromResource(this,
-                R.array.day_frequencies, android.R.layout.simple_spinner_item);
-        adapterDay.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinDay.setAdapter(adapterDay);
-        spinWeek.setAdapter(adapterDay);
-
-        // Setup the spinner with frequencies
-        ArrayAdapter<CharSequence> adapterRecur = ArrayAdapter.createFromResource(this,
-                R.array.recur_frequencies, android.R.layout.simple_spinner_item);
-        adapterRecur.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinFreq.setAdapter(adapterRecur);
+        Calendar calendar = (currListCategory.equals("Today")) ? (Calendar) today.clone() : (Calendar) tomorrow.clone();
+        String theDay = daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1];
+        String occurred = findOccurrence(calendar.get(Calendar.DAY_OF_MONTH));
 
         //initialize texts of right side buttons
         final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
-        final String formattedToday = sdf.format(today.getTime());
-        allFormattedToday = dateFormat.format(today.getTime());
+
         // Initially set the button text to "Select Starting Date"
-        yearlyButton.setText(formattedToday);
-        oneTimeButton.setText(allFormattedToday);
-        dailyButton.setText(allFormattedToday);
-
-        Calendar calendar = today;
-
-        // DatePickerDialog Yearly logic
-        DatePickerDialog.OnDateSetListener dateYear = (view, year, monthOfYear, dayOfMonth) -> {
-            calendar.set(Calendar.YEAR, year);
-            calendar.set(Calendar.MONTH, monthOfYear);
-            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-            // Update the button text with the selected date
-            yearlyButton.setText(sdf.format(calendar.getTime()));
-        };
-
-        // DatePickerDialog Daily logic
-        DatePickerDialog.OnDateSetListener dateDaily = (view, year, monthOfYear, dayOfMonth) -> {
-            calendar.set(Calendar.YEAR, year);
-            calendar.set(Calendar.MONTH, monthOfYear);
-            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-            // Update the button text with the selected date
-            dailyButton.setText(dateFormat.format(calendar.getTime()));
-        };
-
-        // DatePickerDialog One-time logic
-        DatePickerDialog.OnDateSetListener dateOneTime = (view, year, monthOfYear, dayOfMonth) -> {
-            calendar.set(Calendar.YEAR, year);
-            calendar.set(Calendar.MONTH, monthOfYear);
-            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-            // Update the button text with the selected date
-            oneTimeButton.setText(dateFormat.format(calendar.getTime()));
-        };
-
-        //initialize date picker onclicks
-        yearlyButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateYear,
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)).show());
-
-        dailyButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateDaily,
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)).show());
-
-        oneTimeButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateOneTime,
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)).show());
+        textWeekly.setText(daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1]);
+        textMonthly.setText(occurred + " " + theDay);
+        textYearly.setText(sdf.format(calendar.getTime()));
 
         View.OnClickListener radioButtonClickListener = v -> {
             RadioButton rb = (RadioButton) v;
             clearRadioGroupSelection(rb);
             rb.setChecked(true);
         };
-
 
         //initialize radioButtons and onClickListeners
         radioButtons = new ArrayList<>(List.of(radioBtnOneTime, radioBtnDaily, radioBtnWeekly, radioBtnMonthly, radioBtnYearly));
@@ -312,41 +271,32 @@ public class MainActivity extends AppCompatActivity {
 
             //initialize initial values
             final String goalText = editTextGoal.getText().toString().trim();
-            Integer freqMonth = -1, freqOccur = -1;
+            Integer freqMonth = calendar.get(Calendar.MONTH)+1, freqOccur = Integer.valueOf(occurred.substring(0,1));
             long freqTimeInMilli = calendar.getTimeInMillis();
-            String freqType = "", freqDayString = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
-            String listCategory = currListCategory;
+            String freqType = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
+
 
             //Defining internal variables of goal based on what frequency type it is
             if (radioBtnOneTime.isChecked()) {
                 freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
                 freqType = freqTypes[1];
-                freqDayString = daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1];
-                freqTimeInMilli = calendar.getTimeInMillis();
-                listCategory = "Recurring";
             } else if (radioBtnWeekly.isChecked()) {
                 freqType = freqTypes[2];
-                freqDayString = spinWeek.getSelectedItem().toString();
-                listCategory = "Recurring";
             } else if (radioBtnMonthly.isChecked()) {
                 freqType = freqTypes[3];
-                freqMonth = Calendar.MONTH +1;
-                freqOccur = Integer.valueOf(spinFreq.getSelectedItem().toString().substring(0,1));
-                freqDayString = spinDay.getSelectedItem().toString();
-                listCategory = "Recurring";
             } else if (radioBtnYearly.isChecked()) {
                 freqType = freqTypes[4];
-                listCategory = "Recurring";
             }
 
             //creating the goal to be inserted and variables for if statement
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, listCategory, freqDayString, freqTimeInMilli, freqOccur, freqMonth);
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, currListCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
 
             GoalEntity findSameGoal = goalDao.findByGoalText(goalText); //Check if same goalText is in goals
+
             for (RadioButton checkChecked : radioButtons) {
                 if (checkChecked.isChecked()) {
                     radioBtnsAllUnchecked = false;
@@ -362,6 +312,203 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
             } else if (startTime < currentTime && !radioBtnYearly.isChecked()) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please select a valid time.", Toast.LENGTH_SHORT).show());
+            }
+            else {
+                new Thread(() -> goalDao.insert(complete)).start();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    //Recurring Tab Add Dialog
+    private void showAddGoalDialogRecurring() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Goal");
+
+        // Inflate the custom layout
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_recurring, null);
+        builder.setView(dialogView);
+
+        //initialize components of add dialog
+        final EditText editTextGoal = dialogView.findViewById(R.id.text_pending_edit_text_goal_id);
+        final TextView homeContext = dialogView.findViewById(R.id.homeContext);
+        final TextView workContext = dialogView.findViewById(R.id.workContext);
+        final TextView schoolContext = dialogView.findViewById(R.id.schoolContext);
+        final TextView errandsContext = dialogView.findViewById(R.id.errandsContext);
+        final TextView textDaily = dialogView.findViewById(R.id.text_recur_daily);
+        final TextView textWeekly = dialogView.findViewById(R.id.text_recur_weekly);
+        final TextView textMonthly = dialogView.findViewById(R.id.text_recur_monthly);
+        final TextView textYearly = dialogView.findViewById(R.id.text_recur_yearly);
+        final RadioButton radioBtnDaily = dialogView.findViewById(R.id.radio_btn_daily);
+        final RadioButton radioBtnWeekly = dialogView.findViewById(R.id.radio_btn_weekly);
+        final RadioButton radioBtnMonthly = dialogView.findViewById(R.id.radio_btn_monthly);
+        final RadioButton radioBtnYearly = dialogView.findViewById(R.id.radio_btn_yearly);
+        final Button dateButton = dialogView.findViewById(R.id.btn_selectDate);
+
+        //initialize onClick for contextCircles
+        final TextView[] contextCircles = {homeContext, workContext, schoolContext, errandsContext};
+
+        for (TextView contextView : contextCircles) {
+            contextView.setOnClickListener(v -> {
+                TextView chosen = (TextView) v;
+                updateContextSelection(chosen , contextCircles);
+            });
+        }
+
+        Calendar calendar = (Calendar) today.clone();
+        String theDay = daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1];
+        String occurred = findOccurrence(calendar.get(Calendar.DAY_OF_MONTH));
+
+        //initialize texts of right side buttons
+        final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
+
+        //initialize textViews initial
+        textWeekly.setText(daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1]);
+        textMonthly.setText(occurred + " " + theDay);
+        textYearly.setText(sdf.format(calendar.getTime()));
+
+        View.OnClickListener radioButtonClickListener = v -> {
+            RadioButton rb = (RadioButton) v;
+            clearRadioGroupSelection(rb);
+            rb.setChecked(true);
+        };
+
+        // DatePickerDialog One-time logic
+        DatePickerDialog.OnDateSetListener dateRecur = (view, year, monthOfYear, dayOfMonth) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, monthOfYear);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+            // Update the button text with the selected date
+            dateButton.setText(dateFormat.format(calendar.getTime()));
+
+            //initialize textViews based on choice
+            textWeekly.setText(daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1]);
+            textMonthly.setText(findOccurrence(calendar.get(Calendar.DAY_OF_MONTH)) + " " + daysOfWeek[calendar.get(Calendar.DAY_OF_WEEK)-1]);
+            textYearly.setText(sdf.format(calendar.getTime()));
+        };
+
+        //initialize date picker onclicks
+        dateButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateRecur,
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)).show());
+
+        //initialize radioButtons and onClickListeners
+        radioButtons = new ArrayList<>(List.of(radioBtnDaily, radioBtnWeekly, radioBtnMonthly, radioBtnYearly));
+
+        for (RadioButton radio : radioButtons) {
+            radio.setOnClickListener(radioButtonClickListener);
+        }
+
+        // Handle the "Add" button
+        builder.setPositiveButton("Save", (dialog, which) -> {
+
+            //initialize initial values
+            final String goalText = editTextGoal.getText().toString().trim();
+            Integer freqMonth = calendar.get(Calendar.MONTH)+1, freqOccur = Integer.valueOf(occurred.substring(0,1));
+            long freqTimeInMilli = calendar.getTimeInMillis();
+            String freqType = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
+
+
+            //Defining internal variables of goal based on what frequency type it is
+            if (radioBtnDaily.isChecked()) {
+                freqType = freqTypes[1];
+            } else if (radioBtnWeekly.isChecked()) {
+                freqType = freqTypes[2];
+            } else if (radioBtnMonthly.isChecked()) {
+                freqType = freqTypes[3];
+            } else if (radioBtnYearly.isChecked()) {
+                freqType = freqTypes[4];
+            }
+
+            //creating the goal to be inserted and variables for if statement
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, currListCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
+            boolean radioBtnsAllUnchecked = true;
+
+            GoalEntity findSameGoal = goalDao.findByGoalText(goalText); //Check if same goalText is in goals
+
+            for (RadioButton checkChecked : radioButtons) {
+                if (checkChecked.isChecked()) {
+                    radioBtnsAllUnchecked = false;
+                }
+            }
+
+            //if statement checking what we do not have based through writeup/piazza (fix)
+            if (TextUtils.isEmpty(goalText)) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a goal.", Toast.LENGTH_SHORT).show());
+            } else if (radioBtnsAllUnchecked) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please check a goal frequency.", Toast.LENGTH_SHORT).show());
+            } else if (findSameGoal != null) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
+            }
+            else {
+                new Thread(() -> goalDao.insert(complete)).start();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+
+    //Pending Tab Add Dialog
+    private void showAddGoalDialogPending() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Goal");
+
+        // Inflate the custom layout
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_pending, null);
+        builder.setView(dialogView);
+
+        //initialize components of add dialog
+        final EditText editTextGoal = dialogView.findViewById(R.id.text_pending_edit_text_goal_id);
+        final TextView homeContext = dialogView.findViewById(R.id.homeContext);
+        final TextView workContext = dialogView.findViewById(R.id.workContext);
+        final TextView schoolContext = dialogView.findViewById(R.id.schoolContext);
+        final TextView errandsContext = dialogView.findViewById(R.id.errandsContext);
+
+        //initialize onClick for contextCircles
+        final TextView[] contextCircles = {homeContext, workContext, schoolContext, errandsContext};
+
+        for (TextView contextView : contextCircles) {
+            contextView.setOnClickListener(v -> {
+                TextView chosen = (TextView) v;
+                updateContextSelection(chosen , contextCircles);
+            });
+        }
+
+        // Handle the "Add" button
+        builder.setPositiveButton("Save", (dialog, which) -> {
+
+            //initialize initial values
+            final String goalText = editTextGoal.getText().toString().trim();
+            String selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
+
+
+            //creating the goal to be inserted and variables for if statement
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, "", currListCategory, "", 0, 0, 0);
+
+            boolean radioBtnsAllUnchecked = true;
+
+            GoalEntity findSameGoal = goalDao.findByGoalText(goalText); //Check if same goalText is in goals
+
+            for (RadioButton checkChecked : radioButtons) {
+                if (checkChecked.isChecked()) {
+                    radioBtnsAllUnchecked = false;
+                }
+            }
+
+            //if statement checking what we do not have based through writeup/piazza (fix)
+            if (TextUtils.isEmpty(goalText)) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a goal.", Toast.LENGTH_SHORT).show());
+            } else if (radioBtnsAllUnchecked) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please check a goal frequency.", Toast.LENGTH_SHORT).show());
+            } else if (findSameGoal != null) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
             }
             else {
                 new Thread(() -> goalDao.insert(complete)).start();
@@ -426,6 +573,11 @@ public class MainActivity extends AppCompatActivity {
         return todayDay.equals(targetDayOfWeek) && occurrence == freqOccur;
     }
 
+    //Return occurrence index for a Calendar DayOfMonth
+    private String findOccurrence(int dayOfMonth) {
+        return occurrences[((dayOfMonth - 1) / 7)];
+    }
+
     //Check whether goal should appear based on yearly definition
     private boolean isCorrectYearlyOccurrence(GoalEntity goal) {
         Calendar targetDate = Calendar.getInstance();
@@ -485,14 +637,8 @@ public class MainActivity extends AppCompatActivity {
                                     || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
                                     || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
                                     || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal))
-                                    || (goal.getListCategory().equals(currListCategory)))
+                                    || (goal.getListCategory().equals(currListCategory) ))
                             .collect(Collectors.toList());
-            //temporary fix for handling tomorrow and pending
-            if (currListCategory.equals("Tomorrow") && !currListCategory.equals("Pending") && !currListCategory.equals("Recurring") && !currListCategory.equals("Today") ) {
-                filteredGoals[0] = filteredGoals[0].stream()
-                        .filter(goal -> isItTomorrow(goal))
-                        .collect(Collectors.toList());
-            }
             if (inFocusMode) {
                 filteredGoals[0] = filteredGoals[0].stream()
                             .filter(goal -> goal.getContext().equals(focusContext))
@@ -564,5 +710,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     }
+
 }
 
