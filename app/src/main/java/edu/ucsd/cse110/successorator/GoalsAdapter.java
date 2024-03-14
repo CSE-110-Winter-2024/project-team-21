@@ -38,6 +38,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         this.goalDao = goalDao;
     }
 
+    //sort goals by checked first and then by context
     public void updateGoals(List<GoalEntity> newGoals) {
         Map<String, Integer> contextOrder = Map.of(
                 "Home", 1,
@@ -178,12 +179,14 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         }
     }
 
+    //remove checked goals if they are one-time
     public void removeCheckedOffGoals() {
         goalDao.removeCompletedFromDao();
         goalDao.uncheckRecurringGoals();
         notifyDataSetChanged(); // Notify adapter about the changes
     }
 
+    //update the list category of a goal from long click
     private void updateListCategory(GoalEntity goal, String category) {
         goal.setListCategory(category);
         goalDao.update(goal);

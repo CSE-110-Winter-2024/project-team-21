@@ -143,6 +143,33 @@ public class MainActivity extends AppCompatActivity {
         filterChanges();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.dropdown_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.dropdown_menu) {
+            PopupMenu popupMenu = new PopupMenu(this, findViewById(R.id.dropdown_menu));
+            popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(menuItem -> {
+                String selectedOption = menuItem.getTitle().toString();
+                currListCategory = selectedOption;
+                updateDate();
+                filterChanges();
+                updateNoGoalsVisibility();
+                return true;
+            });
+            popupMenu.show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void advanceTimeByOneDay() {
         // Try to parse the date from the TextView, if it exists
         try {
@@ -164,6 +191,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
+
+        // Switch goals marked 'Tomorrow' which are not checked off to 'Today' view
+        goalDao.rolloverTomorrowToToday();
         filterChanges();
     }
 
@@ -176,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
         View dialogView = inflater.inflate(R.layout.dialog_add_goal, null);
         builder.setView(dialogView);
 
+        //initialize components of add dialog
         final EditText editTextGoal = dialogView.findViewById(R.id.edit_text_goal_id);
         final Spinner spinDay = dialogView.findViewById(R.id.spin_day);
         final Spinner spinFreq = dialogView.findViewById(R.id.spin_recurring);
@@ -193,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         final RadioButton radioBtnMonthly = dialogView.findViewById(R.id.radio_btn_monthly);
         final RadioButton radioBtnYearly = dialogView.findViewById(R.id.radio_btn_yearly);
 
-
+        //initialize onClick for contextCircles
         final TextView[] contextCircles = {homeContext, workContext, schoolContext, errandsContext};
 
         for (TextView contextView : contextCircles) {
@@ -216,6 +247,7 @@ public class MainActivity extends AppCompatActivity {
         adapterRecur.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinFreq.setAdapter(adapterRecur);
 
+        //initialize texts of right side buttons
         final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
         final String formattedToday = sdf.format(today.getTime());
         allFormattedToday = dateFormat.format(today.getTime());
@@ -256,6 +288,7 @@ public class MainActivity extends AppCompatActivity {
             oneTimeButton.setText(dateFormat.format(calendar.getTime()));
         };
 
+        //initialize date picker onclicks
         yearlyButton.setOnClickListener(view -> new DatePickerDialog(MainActivity.this, dateYear,
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)).show());
@@ -275,22 +308,23 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-
-        radioBtnOneTime.setOnClickListener(radioButtonClickListener);
-        radioBtnDaily.setOnClickListener(radioButtonClickListener);
-        radioBtnWeekly.setOnClickListener(radioButtonClickListener);
-        radioBtnMonthly.setOnClickListener(radioButtonClickListener);
-        radioBtnYearly.setOnClickListener(radioButtonClickListener);
-
+        //initialize radioButtons
         radioButtons = new ArrayList<>(List.of(radioBtnOneTime, radioBtnDaily, radioBtnWeekly, radioBtnMonthly, radioBtnYearly));
 
+        for (RadioButton radio : radioButtons) {
+            radio.setOnClickListener(radioButtonClickListener);
+        }
         // Handle the "Add" button
         builder.setPositiveButton("Save", (dialog, which) -> {
+
+            //initialize initial values
             final String goalText = editTextGoal.getText().toString().trim();
             Integer freqMonth = -1, freqOccur = -1;
             long freqTimeInMilli = calendar.getTimeInMillis();
             String freqType = "", freqDayString = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
             String listCategory = currListCategory;
+
+            //Defining internal variables of goal based on what frequency type it is
             if (radioBtnOneTime.isChecked()) {
                 freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
@@ -313,6 +347,7 @@ public class MainActivity extends AppCompatActivity {
                 listCategory = "Recurring";
             }
 
+            //creating the goal to be inserted and variables for if statement
             GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, listCategory, freqDayString, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
@@ -324,6 +359,8 @@ public class MainActivity extends AppCompatActivity {
                     radioBtnsAllUnchecked = false;
                 }
             }
+
+            //if statement checking what we do not have based through writeup/piazza (fix)
             if (TextUtils.isEmpty(goalText)) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a goal.", Toast.LENGTH_SHORT).show());
             } else if (radioBtnsAllUnchecked) {
@@ -342,8 +379,10 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+
     //HELPER FUNCTIONS
 
+    //update "No goals for the day" visibility
     private void updateNoGoalsVisibility() {
         if (shownGoalsCount == 0 && dateTextView.getText().toString().equals(allFormattedToday)) {
             noGoalsTextView.setVisibility(View.VISIBLE);
@@ -352,7 +391,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Update the TextView with the current date
+    // Update the dateTextView with the current date
     private void updateDate() {
         switch(currListCategory) {
             case "Today":   dateTextView.setText("Today: " + dateFormat.format(today.getTime()));
@@ -366,6 +405,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Check whether a given goal should appear based on monthly definition
     private boolean isCorrectMonthlyOccurrence(GoalEntity goal) {
         String targetDayOfWeek = goal.getFreqDayString();
         String todayDay = daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1];
@@ -393,6 +433,7 @@ public class MainActivity extends AppCompatActivity {
         return todayDay.equals(targetDayOfWeek) && occurrence == freqOccur;
     }
 
+    //Check whether goal should appear based on yearly definition
     private boolean isCorrectYearlyOccurrence(GoalEntity goal) {
         Calendar targetDate = Calendar.getInstance();
         targetDate.setTimeInMillis(goal.getFreqTimeInMilli());
@@ -414,9 +455,12 @@ public class MainActivity extends AppCompatActivity {
         return currMonth == goalMonth && goalDay == dayOfMonth;
     }
 
+    //Check leap year
     private boolean isLeapYear(int year) {
         return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
     }
+
+    //Check if last month was a thirty day month
     private boolean isThirtyDayMonth(int month) {
         switch (month) {
             case 4:
@@ -429,6 +473,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Logic for selecting only one frequency type
     private void clearRadioGroupSelection(RadioButton selectedRadioButton) {
         for (RadioButton rb : radioButtons) {
             if (!rb.equals(selectedRadioButton)) {
@@ -437,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Dynamically change the goals that appear based upon what user wants (fix listCategory based)
     private void filterChanges() {
         final List<GoalEntity>[] filteredGoals = new List[]{new ArrayList<>()};
         goalDao.getAllGoals().observe(this, goalEntities -> {
@@ -449,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
                                     || (goal.getListCategory().equals(currListCategory)))
                             .collect(Collectors.toList());
             //temporary fix for handling tomorrow and pending
-            if (currListCategory == "Tomorrow") {
+            if (currListCategory.equals("Tomorrow") && !currListCategory.equals("Pending") && !currListCategory.equals("Recurring") && !currListCategory.equals("Today") ) {
                 filteredGoals[0] = filteredGoals[0].stream()
                         .filter(goal -> isItTomorrow(goal))
                         .collect(Collectors.toList());
@@ -481,39 +527,13 @@ public class MainActivity extends AppCompatActivity {
         builder.create().show();
     }
 
+    //Turn off Focus Mode
     private void clearFocusMode() {
         inFocusMode = false;
         focusContext = "N/A";
         // Reset to observe all goals without filtering
         filterChanges();
         updateNoGoalsVisibility();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.dropdown_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        if (itemId == R.id.dropdown_menu) {
-            PopupMenu popupMenu = new PopupMenu(this, findViewById(R.id.dropdown_menu));
-            popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
-
-            popupMenu.setOnMenuItemClickListener(menuItem -> {
-                String selectedOption = menuItem.getTitle().toString();
-                currListCategory = selectedOption;
-                updateDate();
-                filterChanges();
-                updateNoGoalsVisibility();
-                return true;
-            });
-            popupMenu.show();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     //Make selected context circle in add dialog appear chosen and others not
@@ -530,6 +550,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Select only one context Circle
     private TextView getSelectedContext(TextView[] contextCircles) {
         TextView chosen = null;
         for (TextView contextView : contextCircles) {
@@ -540,9 +561,9 @@ public class MainActivity extends AppCompatActivity {
         return chosen;
     }
 
+    //Does the goal appear tomorrow
     private boolean isItTomorrow(GoalEntity goal) {
         String tomorrowDate = dateFormat.format(goal.getFreqTimeInMilli());
-        System.out.println("***"+tomorrowDate+"*"+dateTextView.getText().toString().substring(10)+"***");
         if (tomorrowDate.equals(dateTextView.getText().toString().substring(10))) {
             return true;
         }
