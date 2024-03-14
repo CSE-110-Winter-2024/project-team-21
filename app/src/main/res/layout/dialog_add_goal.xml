@@ -23,7 +23,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Spinner
-        android:id="@+id/linearLayout2"
+        android:id="@+id/spin_context"
         android:layout_width="175dp"
         android:layout_height="30dp"
         android:layout_marginEnd="8dp"
@@ -179,15 +179,10 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/Context"
+        android:id="@+id/textView"
         android:layout_width="150dp"
         android:layout_height="30dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        android:text="Select Context:"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintEnd_toStartOf="@+id/linearLayout2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_text_goal_id" />
+        android:text="TextView"
+        tools:layout_editor_absoluteX="79dp"
+        tools:layout_editor_absoluteY="67dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

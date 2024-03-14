@@ -106,11 +106,12 @@ public class GoalEntity {
     public GoalEntity(String goalText, boolean isChecked, String context, String frequencyType, String freqDayString, long freqTimeInMilli, Integer freqOccur, Integer freqMonth) {
         this.goalText = goalText;
         this.isChecked = isChecked;
+        this.context = context;
         this.frequencyType = frequencyType;
-        this.freqMonth = freqMonth;
         this.freqDayString = freqDayString;
-        this.freqOccur = freqOccur;
         this.freqTimeInMilli = freqTimeInMilli;
+        this.freqOccur = freqOccur;
+        this.freqMonth = freqMonth;
     }
 
     @Override

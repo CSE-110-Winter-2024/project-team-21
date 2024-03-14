@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -71,12 +72,13 @@ public class MainActivity extends AppCompatActivity {
     final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
 
     private int shownGoalsCount;
+    private Spinner contextSpinner; // Spinner for selecting context
     Calendar today = Calendar.getInstance();
 
     String allFormattedToday;
 
     final String[] daysOfWeek = {"Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    final String[] freqTypes = getResources().getStringArray(R.array.goal_frequencies);
+    final String[] freqTypes = {"One-time","Daily", "Weekly", "Monthly", "Yearly"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,36 +100,17 @@ public class MainActivity extends AppCompatActivity {
         today.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH), 0, 0, 0); // Set the calendar to 12:00 AM on the current day with hour, minute, second
         allFormattedToday = dateFormat.format(today.getTime());
 
-        goalDao.getAllGoals().observe(this, goalEntities -> {
-            List<GoalEntity> filteredGoals = goalEntities.stream()
-                    .filter(goal ->
-                            goal.getFrequencyType().equals(freqTypes[0])
-                            || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                            || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                            || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
-                            || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
-                    .collect(Collectors.toList());
-            shownGoalsCount = filteredGoals.size();
-            adapter.updateGoals(filteredGoals);
-            updateNoGoalsVisibility(shownGoalsCount);
-        });
+        filterChanges(inFocusMode);
 
         updateDate();
 
         // Set OnClickListener for FloatingActionButton to add new goals
-        findViewById(R.id.add_goal_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddGoalDialog();
-            }
-        });
+        findViewById(R.id.add_goal_button).setOnClickListener(v -> showAddGoalDialog());
 
-        forwardButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                advanceTimeByOneDay();
-                updateNoGoalsVisibility(shownGoalsCount);
-            }
+        // Forward button listener to advance the day
+        forwardButton.setOnClickListener(v -> {
+            advanceTimeByOneDay();
+            updateNoGoalsVisibility(shownGoalsCount);
         });
     }
 
@@ -136,19 +119,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         today = Calendar.getInstance();
         updateDate();
-        goalDao.getAllGoals().observe(this, goalEntities -> {
-            List<GoalEntity> filteredGoals = goalEntities.stream()
-                    .filter(goal ->
-                            goal.getFrequencyType().equals(freqTypes[0])
-                                    || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                                    || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                                    || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
-                                    || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
-                    .collect(Collectors.toList());
-            shownGoalsCount = filteredGoals.size();
-            adapter.updateGoals(filteredGoals);
-            updateNoGoalsVisibility(shownGoalsCount);
-        });
+        filterChanges(inFocusMode);
     }
 
     private void advanceTimeByOneDay() {
@@ -170,56 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Your method to remove checked-off goals
         adapter.removeCheckedOffGoals();
-        goalDao.getAllGoals().observe(this, goalEntities -> {
-            List<GoalEntity> filteredGoals = goalEntities.stream()
-                    .filter(goal ->
-                            goal.getFrequencyType().equals(freqTypes[0])
-                            || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                            || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                            || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
-                            || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
-                    .collect(Collectors.toList());
-            shownGoalsCount = filteredGoals.size();
-            adapter.updateGoals(filteredGoals);
-            updateNoGoalsVisibility(shownGoalsCount);
-        });
-    }
-
-    // method for when the focus mode button is clicked
-    public void toggleFocusMode(View view) {
-        final String[] contexts = getContexts().toArray(new String[0]);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Select Focus Context")
-                .setItems(contexts, (dialog, which) -> {
-                    // Apply the focus mode with the selected context
-                    focusContext = contexts[which];
-                    inFocusMode = true;
-                    // Use the LiveData observer pattern
-                    goalDao.getAllGoals().observe(this, this::filterGoalsByContext);
-                })
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Clear Focus", (dialog, which) -> clearFocusMode());
-        builder.create().show();
-    }
-
-    private void filterGoalsByContext(List<GoalEntity> goals) {
-        if (inFocusMode && focusContext != null) {
-            // If not null, proceed with filtering
-            List<GoalEntity> filteredGoals = goals.stream()
-                    .filter(goal -> goal.getContext().equals(focusContext))
-                    .collect(Collectors.toList());
-            adapter.setGoalsList(filteredGoals);
-        } else {
-            // If not in focus mode or focus context is null, show all goals
-            adapter.setGoalsList(goals);
-        }
-    }
-
-    private void clearFocusMode() {
-        inFocusMode = false;
-        focusContext = null;
-        // Reset to observe all goals without filtering
-        goalDao.getAllGoals().observe(this, adapter::setGoalsList);
+        filterChanges(inFocusMode);
     }
 
     private void showAddGoalDialog() {
@@ -235,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         final Spinner spinDay = dialogView.findViewById(R.id.spin_day);
         final Spinner spinFreq = dialogView.findViewById(R.id.spin_recurring);
         final Spinner spinWeek = dialogView.findViewById(R.id.spin_weekly);
+        final Spinner spinContext = dialogView.findViewById(R.id.spin_context);
         final Button yearlyButton = dialogView.findViewById(R.id.button_select_start_date);
         final Button oneTimeButton = dialogView.findViewById(R.id.btn_onetime);
         final Button dailyButton = dialogView.findViewById(R.id.btn_daily);
@@ -257,6 +180,11 @@ public class MainActivity extends AppCompatActivity {
                 R.array.recur_frequencies, android.R.layout.simple_spinner_item);
         adapterRecur.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinFreq.setAdapter(adapterRecur);
+
+        ArrayAdapter<CharSequence> adapterContext = ArrayAdapter.createFromResource(this,
+                R.array.contexts, android.R.layout.simple_spinner_item);
+        adapterContext.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinContext.setAdapter(adapterContext);
 
         final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd", Locale.getDefault());
         final String formattedToday = sdf.format(today.getTime());
@@ -329,7 +257,9 @@ public class MainActivity extends AppCompatActivity {
             final String goalText = editTextGoal.getText().toString().trim();
             Integer freqMonth = -1, freqOccur = -1;
             long freqTimeInMilli = calendar.getTimeInMillis();
-            String freqType = "", freqDayString = "", context = "";
+            String freqType = "", freqDayString = "";
+            final String selectedContext = spinContext.getSelectedItem().toString();
+
             if (radioBtnOneTime.isChecked()) {
                 freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
@@ -348,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                 freqType = freqTypes[4];
             }
 
-            GoalEntity complete = new GoalEntity(goalText, false, context, freqType, freqDayString,freqTimeInMilli, freqOccur, freqMonth);
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, freqDayString,freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -469,13 +399,49 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void filterChanges() {
-
+    private void filterChanges(boolean inFocusMode) {
+        final List<GoalEntity>[] filteredGoals = new List[]{new ArrayList<>()};
+        goalDao.getAllGoals().observe(this, goalEntities -> {
+            if (!inFocusMode) {
+                filteredGoals[0] = goalEntities.stream()
+                        .filter(goal ->
+                                goal.getFrequencyType().equals(freqTypes[0])
+                                        || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                        || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                                        || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                                        || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal)))
+                        .collect(Collectors.toList());
+            } else {
+                filteredGoals[0] = goalEntities.stream()
+                        .filter(goal -> goal.getContext().equals(focusContext))
+                        .collect(Collectors.toList());
+            }
+            shownGoalsCount = filteredGoals[0].size();
+            adapter.updateGoals(filteredGoals[0]);
+            updateNoGoalsVisibility(shownGoalsCount);
+        });
     }
 
-    // Helper method to provide context options for the spinner
-    private List<String> getContexts() {
-        // Define the list of contexts to choose from
-        return Arrays.asList("Home", "Work", "School", "Errands");
+    // method for when the focus mode button is clicked
+    public void toggleFocusMode(View view) {
+        final String[] contexts = getResources().getStringArray(R.array.contexts);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Focus Context")
+                .setItems(contexts, (dialog, which) -> {
+                    // Apply the focus mode with the selected context
+                    focusContext = contexts[which];
+                    inFocusMode = true;
+                    filterChanges(inFocusMode);
+                })
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Clear Focus", (dialog, which) -> clearFocusMode());
+        builder.create().show();
+    }
+
+    private void clearFocusMode() {
+        inFocusMode = false;
+        focusContext = null;
+        // Reset to observe all goals without filtering
+        filterChanges(inFocusMode);
     }
 }

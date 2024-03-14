@@ -21,4 +21,10 @@
         <item>4th</item>
         <item>5th</item>
     </string-array>
+    <string-array name="contexts">
+        <item>Home</item>
+        <item>Work</item>
+        <item>School</item>
+        <item>Errands</item>
+    </string-array>
 </resources>
