@@ -49,4 +49,7 @@ public interface GoalDao {
 
     @Query("UPDATE goals SET listCategory = :newCategory WHERE id = :goalId")
     void updateCategoryById(int goalId, String newCategory);
+
+    @Query("DELETE FROM goals")
+    void deleteAllGoals();
 }

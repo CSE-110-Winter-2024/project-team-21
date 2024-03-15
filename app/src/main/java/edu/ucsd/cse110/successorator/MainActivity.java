@@ -644,7 +644,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case "Tomorrow":
                     filteredGoals[0] = goalEntities.stream().filter(goal ->
-                                    (goal.getFrequencyType().equals(freqTypes[0]) && goal.getFreqTimeInMilli() != 0 && tomorrow.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                    (goal.getFrequencyType().equals(freqTypes[0]) && goal.getFreqTimeInMilli() != 0 && !(today.getTimeInMillis() >= goal.getFreqTimeInMilli()) && !goal.getListCategory().equals("Daily"))
                                             || (goal.getFrequencyType().equals(freqTypes[1]) && tomorrow.getTimeInMillis() >= goal.getFreqTimeInMilli())
                                             || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[tomorrow.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
                                             || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
