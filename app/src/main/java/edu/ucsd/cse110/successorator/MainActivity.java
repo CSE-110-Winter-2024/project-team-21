@@ -95,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
         dateTextView = findViewById(R.id.DateText);
         recyclerView = findViewById(R.id.goals_recycler_view);
         noGoalsTextView = findViewById(R.id.no_goals_text);
-        adapter = new GoalsAdapter(goalsList, goalDao);
-        forwardButton = findViewById(R.id.forwardButton); // Find the forward button
+        adapter = new GoalsAdapter(goalsList, goalDao, dateTextView);        forwardButton = findViewById(R.id.forwardButton); // Find the forward button
         addGoalButton = findViewById(R.id.add_goal_button);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
@@ -273,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
             final String goalText = editTextGoal.getText().toString().trim();
             Integer freqMonth = calendar.get(Calendar.MONTH)+1, freqOccur = Integer.valueOf(occurred.substring(0,1));
             long freqTimeInMilli = calendar.getTimeInMillis();
-            String freqType = "", selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
+            String freqType = "", selectedListCategory = currListCategory, selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
 
 
             //Defining internal variables of goal based on what frequency type it is
@@ -281,16 +280,20 @@ public class MainActivity extends AppCompatActivity {
                 freqType = freqTypes[0];
             } else if (radioBtnDaily.isChecked()) {
                 freqType = freqTypes[1];
+                selectedListCategory = "Recurring";
             } else if (radioBtnWeekly.isChecked()) {
                 freqType = freqTypes[2];
+                selectedListCategory = "Recurring";
             } else if (radioBtnMonthly.isChecked()) {
                 freqType = freqTypes[3];
+                selectedListCategory = "Recurring";
             } else if (radioBtnYearly.isChecked()) {
                 freqType = freqTypes[4];
+                selectedListCategory = "Recurring";
             }
 
             //creating the goal to be inserted and variables for if statement
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, currListCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, selectedListCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -490,23 +493,13 @@ public class MainActivity extends AppCompatActivity {
 
 
             //creating the goal to be inserted and variables for if statement
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, "", currListCategory, "", 0, 0, 0);
-
-            boolean radioBtnsAllUnchecked = true;
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, "One-time", currListCategory, "", 0, 0, 0);
 
             GoalEntity findSameGoal = goalDao.findByGoalText(goalText); //Check if same goalText is in goals
-
-            for (RadioButton checkChecked : radioButtons) {
-                if (checkChecked.isChecked()) {
-                    radioBtnsAllUnchecked = false;
-                }
-            }
 
             //if statement checking what we do not have based through writeup/piazza (fix)
             if (TextUtils.isEmpty(goalText)) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please enter a goal.", Toast.LENGTH_SHORT).show());
-            } else if (radioBtnsAllUnchecked) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Please check a goal frequency.", Toast.LENGTH_SHORT).show());
             } else if (findSameGoal != null) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "You already have this goal added.", Toast.LENGTH_SHORT).show());
             }
@@ -524,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
 
     //update "No goals for the day" visibility
     private void updateNoGoalsVisibility() {
-        if (shownGoalsCount == 0 && dateTextView.getText().toString().equals(allFormattedToday)) {
+        if (shownGoalsCount == 0 && currListCategory.equals("Today")) {
             noGoalsTextView.setVisibility(View.VISIBLE);
         } else {
             noGoalsTextView.setVisibility(View.GONE);
@@ -632,12 +625,13 @@ public class MainActivity extends AppCompatActivity {
         final List<GoalEntity>[] filteredGoals = new List[]{new ArrayList<>()};
         goalDao.getAllGoals().observe(this, goalEntities -> {
             filteredGoals[0] = goalEntities.stream().filter(goal ->
-                            goal.getFrequencyType().equals(freqTypes[0])
+                    (goal.getFrequencyType().equals(freqTypes[0]) && goal.getFreqTimeInMilli() != 0 && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
                                     || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
                                     || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
                                     || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
                                     || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal))
-                                    || (goal.getListCategory().equals(currListCategory) ))
+                                    || (goal.getListCategory().equals(currListCategory))
+                                    || (tomorrow.getTimeInMillis() >= goal.getFreqTimeInMilli() && currListCategory.equals("Tomorrow")))
                             .collect(Collectors.toList());
             if (inFocusMode) {
                 filteredGoals[0] = filteredGoals[0].stream()
@@ -699,17 +693,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return chosen;
     }
-
-    //Does the goal appear tomorrow
-    private boolean isItTomorrow(GoalEntity goal) {
-        String tomorrowDate = dateFormat.format(goal.getFreqTimeInMilli());
-        if (tomorrowDate.equals(dateTextView.getText().toString().substring(10))) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
 }
 

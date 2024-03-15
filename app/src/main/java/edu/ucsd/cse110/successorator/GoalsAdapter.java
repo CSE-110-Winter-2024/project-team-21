@@ -1,29 +1,19 @@
 package edu.ucsd.cse110.successorator;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.data.db.GoalEntity;
 
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
@@ -32,10 +22,12 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     private List<GoalEntity> goalsList;
     private GoalDao goalDao;
+    private TextView dateTextView;
 
-    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
+    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao, TextView dateTextView) {
         this.goalsList = goalsList;
         this.goalDao = goalDao;
+        this.dateTextView = dateTextView;
     }
 
     //sort goals by checked first and then by context
@@ -110,6 +102,7 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             }
         }
 
+
         holder.goalCheckBox.setOnClickListener(v -> {
             boolean checked = holder.goalCheckBox.isChecked();
             goalEntity.setChecked(checked);
@@ -121,17 +114,19 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         });
 
         // Set long click listener on goalTextView
-        holder.goalTextView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                GoalEntity clickedGoal = goalsList.get(holder.getAdapterPosition());
+        holder.goalTextView.setOnLongClickListener(v -> {
+            String dateText = dateTextView.getText().toString(); // fix
+            if (dateText.startsWith("Today") || dateText.startsWith("Tomorrow")) {
+                return false; // bc we don't want long click functionality in today/ tmrw view
+            }
 
-                PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+            GoalEntity clickedGoal = goalsList.get(holder.getAdapterPosition());
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
 
+            if (dateText.equals("Pending")) {
                 popupMenu.getMenuInflater().inflate(R.menu.popup_pending_menu, popupMenu.getMenu());
-
                 popupMenu.setOnMenuItemClickListener(item -> {
-                    switch(item.getTitle().toString()) {
+                    switch (item.getTitle().toString()) {
                         case "Move to Today":
                             updateListCategory(clickedGoal, "Today");
                             return true;
@@ -151,9 +146,19 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
                     }
                     return false;
                 });
-                popupMenu.show();
-                return true;
+            } else if (dateText.equals("Recurring")) {
+                popupMenu.getMenuInflater().inflate(R.menu.popup_menu_recurring, popupMenu.getMenu());
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    if (item.getTitle().toString().equals("Delete")) {
+                        goalDao.delete(clickedGoal);
+                        notifyDataSetChanged();
+                        return true;
+                    }
+                    return false;
+                });
             }
+            popupMenu.show();
+            return true;
         });
     }
 
