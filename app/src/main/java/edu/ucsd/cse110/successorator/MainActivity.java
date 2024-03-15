@@ -293,7 +293,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //creating the goal to be inserted and variables for if statement
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, selectedListCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
+            String listCategory = currListCategory;
+            if (freqType.equals(freqTypes[0])) {
+                listCategory = currListCategory;
+            } else if (freqType.equals(freqTypes[1]) || freqType.equals(freqTypes[2]) || freqType.equals(freqTypes[3]) || freqType.equals(freqTypes[4])) {
+                listCategory = "Recurring";
+            }
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, listCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
             final long startTime = calendar.getTimeInMillis();
             final long currentTime = today.getTimeInMillis();
             boolean radioBtnsAllUnchecked = true;
@@ -428,7 +434,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //creating the goal to be inserted and variables for if statement
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, currListCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
+            String listCategory = "Recurring";
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, freqType, listCategory, theDay, freqTimeInMilli, freqOccur, freqMonth);
             boolean radioBtnsAllUnchecked = true;
 
             GoalEntity findSameGoal = goalDao.findByGoalText(goalText); //Check if same goalText is in goals
@@ -491,9 +498,9 @@ public class MainActivity extends AppCompatActivity {
             final String goalText = editTextGoal.getText().toString().trim();
             String selectedContext = contextStrings.get(getSelectedContext(contextCircles).getText().toString());
 
-
             //creating the goal to be inserted and variables for if statement
-            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, "One-time", currListCategory, "", 0, 0, 0);
+            String listCategory = "Pending";
+            GoalEntity complete = new GoalEntity(goalText, false, selectedContext, "One-time", listCategory, "", 0, 0, 0);
 
             GoalEntity findSameGoal = goalDao.findByGoalText(goalText); //Check if same goalText is in goals
 
@@ -624,26 +631,48 @@ public class MainActivity extends AppCompatActivity {
     private void filterChanges() {
         final List<GoalEntity>[] filteredGoals = new List[]{new ArrayList<>()};
         goalDao.getAllGoals().observe(this, goalEntities -> {
-            filteredGoals[0] = goalEntities.stream().filter(goal ->
-                    (goal.getFrequencyType().equals(freqTypes[0]) && goal.getFreqTimeInMilli() != 0 && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                                    || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
-                                    || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
-                                    || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
-                                    || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal))
-                                    || (goal.getListCategory().equals(currListCategory))
-                                    || (tomorrow.getTimeInMillis() >= goal.getFreqTimeInMilli() && currListCategory.equals("Tomorrow")))
+            switch (currListCategory) {
+                case "Today":
+                    filteredGoals[0] = goalEntities.stream().filter(goal ->
+                                    (goal.getFrequencyType().equals(freqTypes[0]) && goal.getFreqTimeInMilli() != 0 && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                            || (goal.getFrequencyType().equals(freqTypes[1]) && today.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                            || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[today.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                                            || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                                            || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal))
+                                            || (goal.getListCategory().equals("Today")))
                             .collect(Collectors.toList());
+                    break;
+                case "Tomorrow":
+                    filteredGoals[0] = goalEntities.stream().filter(goal ->
+                                    (goal.getFrequencyType().equals(freqTypes[0]) && goal.getFreqTimeInMilli() != 0 && tomorrow.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                            || (goal.getFrequencyType().equals(freqTypes[1]) && tomorrow.getTimeInMillis() >= goal.getFreqTimeInMilli())
+                                            || (goal.getFrequencyType().equals(freqTypes[2]) && daysOfWeek[tomorrow.get(Calendar.DAY_OF_WEEK) - 1].equals(goal.getFreqDayString()))
+                                            || (goal.getFrequencyType().equals(freqTypes[3]) && isCorrectMonthlyOccurrence(goal))
+                                            || (goal.getFrequencyType().equals(freqTypes[4]) && isCorrectYearlyOccurrence(goal))
+                                            || (goal.getListCategory().equals("Tomorrow")))
+                            .collect(Collectors.toList());
+                    break;
+                case "Pending":
+                    filteredGoals[0] = goalEntities.stream().filter(goal ->
+                                    goal.getListCategory().equals("Pending"))
+                            .collect(Collectors.toList());
+                    break;
+                case "Recurring":
+                    filteredGoals[0] = goalEntities.stream().filter(goal ->
+                                    goal.getListCategory().equals("Recurring"))
+                            .collect(Collectors.toList());
+                    break;
+            }
             if (inFocusMode) {
                 filteredGoals[0] = filteredGoals[0].stream()
-                            .filter(goal -> goal.getContext().equals(focusContext))
-                            .collect(Collectors.toList());
+                        .filter(goal -> goal.getContext().equals(focusContext))
+                        .collect(Collectors.toList());
             }
             shownGoalsCount = filteredGoals[0].size();
             adapter.updateGoals(filteredGoals[0]);
             updateNoGoalsVisibility();
         });
     }
-
     // method for when the focus mode button is clicked
     public void toggleFocusMode(View view) {
         final String[] contexts = getResources().getStringArray(R.array.contexts);
