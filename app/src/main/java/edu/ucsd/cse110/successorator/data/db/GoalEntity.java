@@ -42,6 +42,9 @@ public class GoalEntity {
     @ColumnInfo(name = "context")
     private String context;
 
+    @ColumnInfo(name = "listCategory")
+    private String listCategory;
+
     public void setId(Integer id) { this.id = id; }
 
     public void setGoalText(String goalText) {
@@ -66,6 +69,11 @@ public class GoalEntity {
     public void setFreqOccur(Integer freqOccur) { this.freqOccur = freqOccur; }
     public void setFreqTimeInMilli(long freqTimeInMilli) { this.freqTimeInMilli = freqTimeInMilli; }
 
+    public void setListCategory(String listCategory) { this.listCategory = listCategory; }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
 
     public Integer getId() {
         return id;
@@ -99,15 +107,16 @@ public class GoalEntity {
         return context;
     }
 
-    public void setContext(String context) {
-        this.context = context;
+    public String getListCategory() {
+        return listCategory;
     }
 
-    public GoalEntity(String goalText, boolean isChecked, String context, String frequencyType, String freqDayString, long freqTimeInMilli, Integer freqOccur, Integer freqMonth) {
+    public GoalEntity(String goalText, boolean isChecked, String context, String frequencyType, String listCategory, String freqDayString, long freqTimeInMilli, Integer freqOccur, Integer freqMonth) {
         this.goalText = goalText;
         this.isChecked = isChecked;
         this.context = context;
         this.frequencyType = frequencyType;
+        this.listCategory = listCategory;
         this.freqDayString = freqDayString;
         this.freqTimeInMilli = freqTimeInMilli;
         this.freqOccur = freqOccur;

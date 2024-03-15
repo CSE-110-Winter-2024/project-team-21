@@ -4,21 +4,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
-
-import edu.ucsd.cse110.successorator.data.db.GoalDao;
-import edu.ucsd.cse110.successorator.data.db.GoalEntity;
+import java.util.Map;
 
 import edu.ucsd.cse110.successorator.data.db.GoalDao;
 import edu.ucsd.cse110.successorator.data.db.GoalEntity;
@@ -27,14 +22,37 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
 
     private List<GoalEntity> goalsList;
     private GoalDao goalDao;
+    private TextView dateTextView;
 
-    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao) {
+    public GoalsAdapter(List<GoalEntity> goalsList, GoalDao goalDao, TextView dateTextView) {
         this.goalsList = goalsList;
         this.goalDao = goalDao;
+        this.dateTextView = dateTextView;
     }
 
+    //sort goals by checked first and then by context
     public void updateGoals(List<GoalEntity> newGoals) {
-        Collections.sort(newGoals, (o1, o2) -> Boolean.compare(o1.isChecked(), o2.isChecked()));
+        Map<String, Integer> contextOrder = Map.of(
+                "Home", 1,
+                "Work", 2,
+                "School", 3,
+                "Errands", 4
+        );
+
+        // Custom sort: First by isChecked status, then by context order
+        Collections.sort(newGoals, (o1, o2) -> {
+            // First compare by isChecked status
+            int checkedCompare = Boolean.compare(o1.isChecked(), o2.isChecked());
+            if (checkedCompare == 0) {
+                // If isChecked status is the same, sort by context
+                return Integer.compare(
+                        contextOrder.getOrDefault(o1.getContext(), 5),
+                        contextOrder.getOrDefault(o2.getContext(), 5)
+                );
+            }
+            return checkedCompare;
+        });
+
         this.goalsList = newGoals;
         notifyDataSetChanged();
     }
@@ -55,11 +73,17 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         holder.goalCheckBox.setChecked(goal.isChecked());
 
         String context = goal.getContext();
-        if (context != null && !context.isEmpty()) {
-            holder.contextTextView.setText(context);
-            holder.contextTextView.setVisibility(View.VISIBLE);
-        } else {
-            holder.contextTextView.setVisibility(View.GONE);
+        holder.contextTextView.setText(context.substring(0,1));
+
+        switch(context) {
+            case "Home": holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_home));
+                break;
+            case "Work": holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_work));
+                break;
+            case "School":holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_school));
+                break;
+            case "Errands":holder.contextTextView.setBackground(ContextCompat.getDrawable(holder.contextTextView.getContext(), R.drawable.context_errands));
+                break;
         }
 
         //fixed issue if goalEntity would not be found aka null
@@ -78,19 +102,71 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
             }
         }
 
+
         holder.goalCheckBox.setOnClickListener(v -> {
             boolean checked = holder.goalCheckBox.isChecked();
             goalEntity.setChecked(checked);
-
+            if (goalEntity.getListCategory().equals("Tomorrow") || goalEntity.getListCategory().equals("Today")) {
+                goalEntity.setListCategory("Today");
+            }
             goalDao.update(goalEntity);
             notifyDataSetChanged();
+        });
+
+        // Set long click listener on goalTextView
+        holder.goalTextView.setOnLongClickListener(v -> {
+            String dateText = dateTextView.getText().toString(); // fix
+            if (dateText.startsWith("Today") || dateText.startsWith("Tomorrow")) {
+                return false; // bc we don't want long click functionality in today/ tmrw view
+            }
+
+            GoalEntity clickedGoal = goalsList.get(holder.getAdapterPosition());
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+
+            if (dateText.equals("Pending")) {
+                popupMenu.getMenuInflater().inflate(R.menu.popup_pending_menu, popupMenu.getMenu());
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    switch (item.getTitle().toString()) {
+                        case "Move to Today":
+                            updateListCategory(clickedGoal, "Today");
+                            return true;
+                        case "Move to Tomorrow":
+                            updateListCategory(clickedGoal, "Tomorrow");
+                            return true;
+                        case "Finish":
+                            clickedGoal.setChecked(true);
+                            clickedGoal.setListCategory("Today");
+                            goalDao.update(clickedGoal);
+                            notifyDataSetChanged();
+                            return true;
+                        case "Delete":
+                            goalDao.delete(clickedGoal);
+                            notifyDataSetChanged();
+                            return true;
+                    }
+                    return false;
+                });
+            } else if (dateText.equals("Recurring")) {
+                popupMenu.getMenuInflater().inflate(R.menu.popup_menu_recurring, popupMenu.getMenu());
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    if (item.getTitle().toString().equals("Delete")) {
+                        goalDao.delete(clickedGoal);
+                        notifyDataSetChanged();
+                        return true;
+                    }
+                    return false;
+                });
+            }
+            popupMenu.show();
+            return true;
         });
     }
 
 
     @Override
     public int getItemCount() {
-        return goalsList.size();
+        if (goalsList != null) {return goalsList.size();}
+        return 0;
     }
 
     // Provide a reference to the views for each data item
@@ -108,14 +184,22 @@ public class GoalsAdapter extends RecyclerView.Adapter<GoalsAdapter.ViewHolder> 
         }
     }
 
+    //remove checked goals if they are one-time
     public void removeCheckedOffGoals() {
         goalDao.removeCompletedFromDao();
         goalDao.uncheckRecurringGoals();
         notifyDataSetChanged(); // Notify adapter about the changes
     }
 
-    public void setGoalsList(List<GoalEntity> goalsList) {
-        this.goalsList = goalsList;
+    //update the list category of a goal from long click
+    private void updateListCategory(GoalEntity goal, String category) {
+        goal.setListCategory(category);
+        goalDao.update(goal);
+        notifyDataSetChanged();
+    }
+
+    public void rolloverTomorrowToToday() {
+        goalDao.rolloverTomorrowToToday();
         notifyDataSetChanged();
     }
 }
