@@ -29,12 +29,26 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:onClick="toggleFocusMode"
+        android:layout_marginBottom="14dp"
         android:text="Focus Mode"
         app:layout_constraintBottom_toTopOf="@+id/goals_recycler_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/DateText" />
+
+    <TextView
+        android:id="@+id/text_focus"
+        android:layout_width="43dp"
+        android:layout_height="39dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:text="Off"
+        android:textColor="@color/purple_700"
+        android:textSize="24dp"
+        app:layout_constraintBottom_toTopOf="@+id/goals_recycler_view"
+        app:layout_constraintStart_toEndOf="@+id/btn_focus_mode"
         app:layout_constraintTop_toBottomOf="@+id/DateText" />
 
     <TextView

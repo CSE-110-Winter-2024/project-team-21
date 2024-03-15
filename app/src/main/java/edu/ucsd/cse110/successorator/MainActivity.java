@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     private String focusContext = "";
 
     private int shownGoalsCount;
+    private Button btnFocus;
+    private TextView textFocus;
     Calendar today;
 
     String allFormattedToday;
@@ -99,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
         addGoalButton = findViewById(R.id.add_goal_button);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        btnFocus = findViewById(R.id.btn_focus_mode);
+        textFocus = findViewById(R.id.text_focus);
         shownGoalsCount = 0;
 
         today = Calendar.getInstance();
@@ -118,6 +122,11 @@ public class MainActivity extends AppCompatActivity {
         addGoalButton.setOnClickListener(v ->
                 showAddGoalDialogGeneral()
         );
+
+        // Set OnClickListener for FloatingActionButton to add new goals
+        btnFocus.setOnClickListener(v ->{
+                toggleFocusMode(v);
+        });
 
         // Forward button listener to advance the day
         forwardButton.setOnClickListener(v -> {
@@ -673,6 +682,7 @@ public class MainActivity extends AppCompatActivity {
             updateNoGoalsVisibility();
         });
     }
+
     // method for when the focus mode button is clicked
     public void toggleFocusMode(View view) {
         final String[] contexts = getResources().getStringArray(R.array.contexts);
@@ -682,6 +692,7 @@ public class MainActivity extends AppCompatActivity {
                     // Apply the focus mode with the selected context
                     focusContext = contexts[which];
                     inFocusMode = true;
+                    textFocus.setText("On");
                     filterChanges();
                 })
                 .setNegativeButton("Cancel", null)
@@ -693,6 +704,7 @@ public class MainActivity extends AppCompatActivity {
     private void clearFocusMode() {
         inFocusMode = false;
         focusContext = "N/A";
+        textFocus.setText("Off");
         // Reset to observe all goals without filtering
         filterChanges();
         updateNoGoalsVisibility();
